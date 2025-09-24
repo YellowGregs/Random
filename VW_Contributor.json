@@ -1,0 +1,34 @@
+[
+    {
+      "user_id": "841741831556825088",
+      "name": "Mr Erco",
+      "description": "Owner & Head Developer of Voidware",
+      "role": "Owner",
+      "github": "Erchobg"
+    },
+    {
+        "user_id": "1187823462312587285",
+        "name": "DaiPlayz",
+        "description": "Backend & Bot Developer of Voidware",
+        "role": "Backend & Bot Developer"
+    },
+    {
+        "user_id": "1334300740587356261",
+        "name": "Lena",
+        "description": "Developer of Voidware",
+        "role": "Developer"
+    },
+    {
+        "user_id": "1380011634801512619",
+        "name": "YellowGreg",
+        "description": "Web Developer",
+        "role": "Web Developer",
+        "github": "YellowGregs"
+    },
+    {
+        "user_id": "804955810820128798",
+        "name": "wsp",
+        "description": "Web Designer",
+        "role": "Web Designer"
+    }
+]
