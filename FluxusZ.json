@@ -1,15 +1,15 @@
 {
   "name": "FluxusZ",
-  "version": "V1.0",
+  "version": "V1.1",
   "ApkLink": {
     "32": "",
     "64": ""
   },
   "vng": {
     "32": "",
-    "64": ""
+    "64": "https://www.mediafire.com/file/ml44k8hc0mjt8l8/FluxusZ+V1.1.apk/file"
   },
   "WindowsLink": "",
-  "ExternalLink": "https://gofile.io/d/W0m4lh",
-  "discord_invite": "https://discord.gg/cTGAHTvrCJ"
+  "ExternalLink": "",
+  "discord_invite": "https://discord.gg/fluxusz"
 }
