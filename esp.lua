@@ -48,6 +48,22 @@ local function draw_line()
     return line
 end
 
+local function safe_set_visible(obj, state)
+    if typeof(obj) == "userdata" and obj.Visible ~= nil then
+        obj.Visible = state
+    end
+end
+
+local function safe_loop_table(tbl, state)
+    for _, obj in pairs(tbl) do
+        if type(obj) == "table" then
+            safe_loop_table(obj, state)
+        else
+            safe_set_visible(obj, state)
+        end
+    end
+end
+
 local function create_esp(player)
     local esp = {
         box = Drawing.new("Square"),
@@ -114,13 +130,7 @@ end
 local function remove_esp(player)
     local esp = esp_objects[player]
     if not esp then return end
-    for _, obj in pairs(esp) do
-        if type(obj) == "table" then
-            for _, line in pairs(obj) do line:Remove() end
-        else
-            obj:Remove()
-        end
-    end
+    safe_loop_table(esp, false)
     esp_objects[player] = nil
 end
 
@@ -145,10 +155,7 @@ end
 run_service.RenderStepped:Connect(function()
     if not rmonnesy_esp.settings.enabled then
         for _, esp in pairs(esp_objects) do
-            for _, obj in pairs(esp) do
-                if type(obj) == "table" then for _, s in pairs(obj) do s.Visible = false end
-                else obj.Visible = false end
-            end
+            safe_loop_table(esp, false)
         end
         return
     end
@@ -164,17 +171,14 @@ run_service.RenderStepped:Connect(function()
         local root = char and char:FindFirstChild("HumanoidRootPart")
         local head = char and char:FindFirstChild("Head")
         if not humanoid or not root or humanoid.Health <= 0 then
-            for _, obj in pairs(esp) do
-                if type(obj) == "table" then for _, s in pairs(obj) do s.Visible = false end
-                else obj.Visible = false end
-            end
+            safe_loop_table(esp, false)
             continue
         end
 
         local dist = (lp_pos - root.Position).Magnitude
         if dist > rmonnesy_esp.settings.max_distance then continue end
 
-        -- Cham ESP for parts
+        -- Cham ESP
         if rmonnesy_esp.settings.cham_esp then
             for _, part in pairs(char:GetChildren()) do
                 if part:IsA("BasePart") then
