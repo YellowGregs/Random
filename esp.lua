@@ -2,6 +2,7 @@ local players = game:GetService("Players")
 local run_service = game:GetService("RunService")
 local local_player = players.LocalPlayer
 local camera = workspace.CurrentCamera
+local workspace = workspace
 
 local rmonnesy_esp = {}
 
@@ -12,14 +13,14 @@ rmonnesy_esp.settings = {
     health_esp = true,
     name_esp = true,
     distance_esp = true,
-    cham_esp = false,
-    skeleton_esp = true,           
+    cham_esp = true,
+    skeleton_esp = true,
     tracer_esp = true,
-    offscreen_arrow_esp = true,    
+    offscreen_arrow_esp = true,
     outline_esp = true,
-    lookat_esp = true,             
-    circle_esp = true,             
-    box_type = "corner",           -- 2d, 3d, or corner
+    lookat_esp = true,
+    circle_esp = true,
+    box_type = "corner",           -- 2d, 3d, corner
     max_distance = 5000,
     text_size = 18,
     font = 2,
@@ -32,7 +33,9 @@ rmonnesy_esp.settings = {
     head_color = Color3.fromRGB(255,255,255),
     skeleton_color = Color3.fromRGB(255,255,255),
     arrow_color = Color3.fromRGB(255,255,0),
-    lookat_color = Color3.fromRGB(255,0,0)
+    lookat_color = Color3.fromRGB(255,0,0),
+    cham_color = Color3.fromRGB(0,255,255),
+    cham_transparency = 0.6
 }
 
 local esp_objects = {}
@@ -56,7 +59,8 @@ local function create_esp(player)
         lookat_line = draw_line(),
         body_circle = Drawing.new("Circle"),
         offscreen_arrow = draw_line(),
-        skeleton = {}
+        skeleton = {},
+        cham_parts = {}
     }
 
     esp.box.Thickness = 1
@@ -130,15 +134,20 @@ end)
 
 players.PlayerRemoving:Connect(remove_esp)
 
+local function apply_cham(part)
+    if rmonnesy_esp.settings.cham_esp and part:IsA("BasePart") then
+        part.Color = rmonnesy_esp.settings.cham_color
+        part.Transparency = rmonnesy_esp.settings.cham_transparency
+        part.Material = Enum.Material.Neon
+    end
+end
+
 run_service.RenderStepped:Connect(function()
     if not rmonnesy_esp.settings.enabled then
         for _, esp in pairs(esp_objects) do
             for _, obj in pairs(esp) do
-                if type(obj) == "table" then
-                    for _, sub in pairs(obj) do sub.Visible = false end
-                else
-                    obj.Visible = false
-                end
+                if type(obj) == "table" then for _, s in pairs(obj) do s.Visible = false end
+                else obj.Visible = false end
             end
         end
         return
@@ -164,6 +173,15 @@ run_service.RenderStepped:Connect(function()
 
         local dist = (lp_pos - root.Position).Magnitude
         if dist > rmonnesy_esp.settings.max_distance then continue end
+
+        -- Cham ESP for parts
+        if rmonnesy_esp.settings.cham_esp then
+            for _, part in pairs(char:GetChildren()) do
+                if part:IsA("BasePart") then
+                    apply_cham(part)
+                end
+            end
+        end
 
         local root_screen, on_screen = camera:WorldToViewportPoint(root.Position)
         if not on_screen then
@@ -234,12 +252,8 @@ run_service.RenderStepped:Connect(function()
 
         if rmonnesy_esp.settings.head_esp and head then
             local hs, vis = camera:WorldToViewportPoint(head.Position)
-            if vis then
-                esp.head_circle.Position = Vector2.new(hs.X, hs.Y)
-                esp.head_circle.Visible = true
-            else
-                esp.head_circle.Visible = false
-            end
+            esp.head_circle.Position = Vector2.new(hs.X, hs.Y)
+            esp.head_circle.Visible = vis
         end
 
         if rmonnesy_esp.settings.circle_esp then
@@ -280,6 +294,7 @@ run_service.RenderStepped:Connect(function()
             esp.distance_text.Visible = false
         end
 
+        -- Skeleton ESP
         if rmonnesy_esp.settings.skeleton_esp and char then
             local bones = {
                 {"Head","UpperTorso"},
@@ -298,18 +313,20 @@ run_service.RenderStepped:Connect(function()
                 {"RightLowerArm","RightHand"}
             }
             for i, bone in ipairs(bones) do
-                local part1, part2 = char:FindFirstChild(bone[1]), char:FindFirstChild(bone[2])
-                if part1 and part2 then
-                    local p1, v1 = camera:WorldToViewportPoint(part1.Position)
-                    local p2, v2 = camera:WorldToViewportPoint(part2.Position)
-                    local line = esp.skeleton[i]
-                    if v1 and v2 then
-                        line.From = Vector2.new(p1.X, p1.Y)
-                        line.To = Vector2.new(p2.X, p2.Y)
+                local p1, p2 = char:FindFirstChild(bone[1]), char:FindFirstChild(bone[2])
+                local line = esp.skeleton[i]
+                if p1 and p2 then
+                    local sp1, vis1 = camera:WorldToViewportPoint(p1.Position)
+                    local sp2, vis2 = camera:WorldToViewportPoint(p2.Position)
+                    if vis1 and vis2 then
+                        line.From = Vector2.new(sp1.X, sp1.Y)
+                        line.To = Vector2.new(sp2.X, sp2.Y)
                         line.Visible = true
                     else
                         line.Visible = false
                     end
+                else
+                    line.Visible = false
                 end
             end
         else
@@ -318,6 +335,7 @@ run_service.RenderStepped:Connect(function()
     end
 end)
 
+-- Library functions
 function rmonnesy_esp.toggle(name, value)
     if rmonnesy_esp.settings[name] ~= nil then
         rmonnesy_esp.settings[name] = value
