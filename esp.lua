@@ -7,201 +7,363 @@ local Camera = Workspace.CurrentCamera
 local safe = {}
 
 safe.isfile = function(name)
-	local ok, res = pcall(function() return isfile and isfile(name) or false end)
-	return ok and res or false
+    local ok, res = pcall(function() return isfile and isfile(name) or false end)
+    return ok and res or false
 end
 
 safe.readfile = function(name)
-	local ok, res = pcall(function() return readfile and readfile(name) or nil end)
-	return ok and res
+    local ok, res = pcall(function() return readfile and readfile(name) or nil end)
+    return ok and res
 end
 
 safe.writefile = function(name, content)
-	pcall(function()
-		if writefile then writefile(name, content) end
-	end)
+    pcall(function()
+        if writefile then
+            writefile(name, content)
+        end
+    end)
 end
 
 safe.append_log = function(name, content)
-	pcall(function()
-		local existing = ""
-		if safe.isfile(name) then existing = safe.readfile(name) or "" end
-		safe.writefile(name, existing .. content .. "\n")
-	end)
+    pcall(function()
+        local existing = ""
+        if safe.isfile(name) then
+            existing = safe.readfile(name) or ""
+        end
+        safe.writefile(name, existing .. content .. "\n")
+    end)
 end
 
 local LOG_FILE = "rmonnesy_esp_errors.txt"
+
 local function log_error(err)
-	safe.append_log(LOG_FILE, string.format("[%s] %s", os.date(), tostring(err)))
+    local msg = string.format("[%s] %s", os.date(), tostring(err))
+    safe.append_log(LOG_FILE, msg)
 end
 
 local function clamp(x, a, b) return math.max(a, math.min(b, x)) end
 local function lerp(a,b,t) return a + (b-a)*t end
-local function ColorLerp(c1,c2,t)
-	return Color3.new(lerp(c1.R,c2.R,t), lerp(c1.G,c2.G,t), lerp(c1.B,c2.B,t))
+local function ColorLerp(c1, c2, t)
+    return Color3.new(lerp(c1.R, c2.R, t), lerp(c1.G, c2.G, t), lerp(c1.B, c2.B, t))
+end
+--erm
+local function world_to_screen(position)
+    local success, sx, sy, onScreen = pcall(function()
+        local p, vis = Camera:WorldToViewportPoint(position)
+        return p, p.X, p.Y, vis
+    end)
+    if not success then return nil, nil, false end
+    return Vector2.new(sx, sy), onScreen
 end
 
 local rmonnesy_esp = {}
+
 rmonnesy_esp.settings = {
-	enabled = true,
-	max_distance = 5000,
-	text_size = 18,
-	font = 2,
+    enabled = true,
+    max_distance = 5000,
+    text_size = 18,
+    font = 2,
 
-	box_esp = true,
-	box_type = "3d", -- "2d", "3d", "corner"
-	skeleton_esp = true,
-	offscreen_arrow_esp = true,
-	tracer_esp = true,
-	lookat_esp = true,
-	head_esp = false,
-	health_esp = true,
-	name_esp = true,
-	distance_esp = true,
-	outline_esp = true,
+    box_esp = true,         --  (2D/3D/corner)
+    box_type = "3d",       -- "2d", "3d", "corner"
+    skeleton_esp = true,
+    offscreen_arrow_esp = true,
+    tracer_esp = true,
+    lookat_esp = true,
+    head_esp = false,       -- small head circle (optional)
+    health_esp = true,
+    name_esp = true,
+    distance_esp = true,
+    outline_esp = true,
+    -- cham_esp = false,     -- COMMENTED OUT FOR LATER IMPLEMENTATION
 
-	color_mode = "team", -- "team", "static", "rainbow", "per-player"
-	static_color = Color3.fromRGB(255,255,255),
-	friend_color = Color3.fromRGB(0,255,0),
-	enemy_color = Color3.fromRGB(255,0,0),
-	neutral_color = Color3.fromRGB(160,160,160),
+    -- color settings
+    color_mode = "team",   -- "team", "static", "rainbow", "per-player"
+    static_color = Color3.fromRGB(255,255,255),
+    friend_color = Color3.fromRGB(0,255,0),
+    enemy_color = Color3.fromRGB(255,0,0),
+    neutral_color = Color3.fromRGB(160,160,160),
 
-	min_scale = 0.35,
-	max_scale = 1.0,
-	fade_to_color = Color3.fromRGB(110,110,110),
+    -- scaling & fading
+    min_scale = 0.35,
+    max_scale = 1.0,
+    fade_to_color = Color3.fromRGB(110,110,110), -- color to lerp to when distant
 
-	tracer_color = Color3.fromRGB(255,255,255),
-	health_color = Color3.fromRGB(0,255,0),
+    -- visuals
+    tracer_color = Color3.fromRGB(255,255,255),
+    health_color = Color3.fromRGB(0,255,0),
 
-	arrow_size = 20,
+    -- offscreen arrow
+    arrow_size = 20,
 }
 
-rmonnesy_esp.friends = {}
+-- optional 
+rmonnesy_esp.friends = {
+    -- player names here for "friend" marking
+    -- ["CoolFriendName"] = true,
+}
 
 local esp_objects = {}
 
 local function rainbowColor(t)
-	local r = math.floor((math.sin(t*1.3)+1)*127.5)
-	local g = math.floor((math.sin(t*1.7+2)+1)*127.5)
-	local b = math.floor((math.sin(t*1.9+4)+1)*127.5)
-	return Color3.fromRGB(r,g,b)
+    local r = math.floor((math.sin(t*1.3)+1)*127.5)
+    local g = math.floor((math.sin(t*1.7 + 2)+1)*127.5)
+    local b = math.floor((math.sin(t*1.9 + 4)+1)*127.5)
+    return Color3.fromRGB(r,g,b)
 end
 
 local function create_esp(player)
-	local objs = {}
-	objs.box = Drawing.new("Square")
-	objs.box.Thickness = 1
-	objs.box.Filled = false
-	objs.box.Visible = false
+    local ok, err = pcall(function()
+        local objs = {}
 
-	objs.corner_lines, objs.box_3d, objs.skeleton, objs.arrow = {}, {}, {}, {}
+        -- box (Square for 2D/corner; Line objects for 3D box)
+        objs.box = Drawing.new("Square")
+        objs.box.Thickness = 1
+        objs.box.Filled = false
+        objs.box.Visible = false
 
-	for i=1,4 do
-		local l = Drawing.new("Line"); l.Thickness=1; l.Visible=false
-		table.insert(objs.corner_lines,l)
-	end
-	for i=1,12 do
-		local l = Drawing.new("Line"); l.Thickness=1; l.Visible=false
-		table.insert(objs.box_3d,l)
-	end
-	for i=1,10 do
-		local l = Drawing.new("Line"); l.Thickness=1; l.Visible=false
-		table.insert(objs.skeleton,l)
-	end
-	for i=1,3 do
-		local l = Drawing.new("Line"); l.Thickness=1; l.Visible=false
-		table.insert(objs.arrow,l)
-	end
+        -- corner box lines (4 lines)
+        objs.corner_lines = {}
+        for i=1,4 do
+            local l = Drawing.new("Line")
+            l.Thickness = 1
+            l.Visible = false
+            table.insert(objs.corner_lines, l)
+        end
 
-	objs.tracer = Drawing.new("Line"); objs.tracer.Thickness=1; objs.tracer.Visible=false
-	objs.lookat = Drawing.new("Line"); objs.lookat.Thickness=1; objs.lookat.Visible=false
-	objs.head_circle = Drawing.new("Circle"); objs.head_circle.Thickness=1; objs.head_circle.Filled=false; objs.head_circle.Visible=false
-	objs.name_text = Drawing.new("Text"); objs.name_text.Center=true; objs.name_text.Visible=false
-	objs.distance_text = Drawing.new("Text"); objs.distance_text.Center=true; objs.distance_text.Visible=false
-	objs.health_bar = Drawing.new("Square"); objs.health_bar.Filled=true; objs.health_bar.Visible=false
+        -- 3D box lines (12 edges)
+        objs.box_3d = {}
+        for i=1,12 do
+            local l = Drawing.new("Line")
+            l.Thickness = 1
+            l.Visible = false
+            table.insert(objs.box_3d, l)
+        end
 
-	esp_objects[player] = objs
+        -- skeleton lines (head->torso, torso->limbs)
+        objs.skeleton = {}
+        for i=1,10 do
+            local l = Drawing.new("Line")
+            l.Thickness = 1
+            l.Visible = false
+            table.insert(objs.skeleton, l)
+        end
+
+        -- tracer
+        objs.tracer = Drawing.new("Line")
+        objs.tracer.Thickness = 1
+        objs.tracer.Visible = false
+
+        -- lookat line
+        objs.lookat = Drawing.new("Line")
+        objs.lookat.Thickness = 1
+        objs.lookat.Visible = false
+
+        -- head circle
+        objs.head_circle = Drawing.new("Circle")
+        objs.head_circle.Thickness = 1
+        objs.head_circle.Filled = false
+        objs.head_circle.Visible = false
+
+        -- name and distance text
+        objs.name_text = Drawing.new("Text")
+        objs.name_text.Size = rmonnesy_esp.settings.text_size
+        objs.name_text.Center = true
+        objs.name_text.Visible = false
+
+        objs.distance_text = Drawing.new("Text")
+        objs.distance_text.Size = rmonnesy_esp.settings.text_size - 2
+        objs.distance_text.Center = true
+        objs.distance_text.Visible = false
+
+        -- health bar
+        objs.health_bar = Drawing.new("Square")
+        objs.health_bar.Filled = true
+        objs.health_bar.Visible = false
+
+        -- offscreen arrow (triangle made of 3 lines)
+        objs.arrow = {}
+        for i=1,3 do
+            local l = Drawing.new("Line")
+            l.Thickness = 1
+            l.Visible = false
+            table.insert(objs.arrow, l)
+        end
+
+        esp_objects[player] = objs
+    end)
+    if not ok then
+        log_error(err)
+    end
 end
 
 local function remove_esp(player)
-	local esp = esp_objects[player]
-	if not esp then return end
-	for _, v in pairs(esp) do
-		if type(v)=="table" then for _,o in pairs(v) do pcall(function() o:Remove() end) end
-		else pcall(function() v:Remove() end) end
-	end
-	esp_objects[player]=nil
+    local ok, err = pcall(function()
+        local esp = esp_objects[player]
+        if not esp then return end
+        for k, v in pairs(esp) do
+            if type(v) == "table" then
+                for _,obj in pairs(v) do
+                    pcall(function() obj:Remove() end)
+                end
+            else
+                pcall(function() v:Remove() end)
+            end
+        end
+        esp_objects[player] = nil
+    end)
+    if not ok then log_error(err) end
 end
 
-for _,pl in pairs(Players:GetPlayers()) do if pl~=LocalPlayer then create_esp(pl) end end
-Players.PlayerAdded:Connect(function(pl) if pl~=LocalPlayer then create_esp(pl) end end)
-Players.PlayerRemoving:Connect(remove_esp)
+for _, pl in pairs(Players:GetPlayers()) do
+    if pl ~= LocalPlayer then create_esp(pl) end
+end
+
+Players.PlayerAdded:Connect(function(pl)
+    if pl ~= LocalPlayer then
+        pcall(function() create_esp(pl) end)
+    end
+end)
+Players.PlayerRemoving:Connect(function(pl) remove_esp(pl) end)
 
 local function get_player_color(player, dist, now)
-	local s = rmonnesy_esp.settings
-	local base
-	if s.color_mode=="static" then base=s.static_color
-	elseif s.color_mode=="rainbow" then base=rainbowColor(now + (player.UserId or 0)*0.0001)
-	elseif s.color_mode=="per-player" then
-		local h=0; for i=1,#player.Name do h=h+player.Name:byte(i) end
-		base=rainbowColor(h*0.01+now)
-	else
-		if rmonnesy_esp.friends[player.Name] then
-			base=s.friend_color
-		elseif player.Team and LocalPlayer.Team and player.Team==LocalPlayer.Team then
-			base=s.friend_color
-		elseif player.Team and LocalPlayer.Team and player.Team~=LocalPlayer.Team then
-			base=s.enemy_color
-		else base=s.neutral_color end
-	end
+    local settings = rmonnesy_esp.settings
+    local base
+    if settings.color_mode == "static" then
+        base = settings.static_color
+    elseif settings.color_mode == "rainbow" then
+        base = rainbowColor(now + (player and player.UserId or 0) * 0.0001)
+    elseif settings.color_mode == "per-player" then
+        -- per-player custom: use hash of name
+        local h = 0
+        for i=1,#player.Name do h = h + player.Name:byte(i) end
+        base = rainbowColor(h * 0.01 + now)
+    else -- team/default
+        local isFriend = rmonnesy_esp.friends[player.Name]
+        if isFriend then
+            base = settings.friend_color
+        else
+            local success, same = pcall(function()
+                return (player.Team ~= nil and LocalPlayer.Team ~= nil) and (player.Team == LocalPlayer.Team)
+            end)
+            if success and same then
+                base = settings.friend_color
+            else
+                if player.Team and LocalPlayer.Team and player.Team ~= LocalPlayer.Team then
+                    base = settings.enemy_color
+                else
+                    base = settings.neutral_color
+                end
+            end
+        end
+    end
 
-	local t = clamp(1 - dist/s.max_distance, 0, 1)
-	local faded = ColorLerp(s.fade_to_color, base, t)
-	return faded, t
+    local t = clamp(1 - dist / settings.max_distance, 0, 1)
+    t = clamp((t - 0) / (1 - 0), 0, 1)
+    local faded = ColorLerp(settings.fade_to_color, base, t)
+    return faded, t
 end
 
+--  for 3d box edges
 local function get_part_corners(part)
-	local cf=part.CFrame; local sx,sy,sz=part.Size.X/2,part.Size.Y/2,part.Size.Z/2
-	return {
-		cf*Vector3.new(sx,sy,sz), cf*Vector3.new(-sx,sy,sz), cf*Vector3.new(sx,-sy,sz),
-		cf*Vector3.new(sx,sy,-sz), cf*Vector3.new(-sx,-sy,sz), cf*Vector3.new(sx,-sy,-sz),
-		cf*Vector3.new(-sx,sy,-sz), cf*Vector3.new(-sx,-sy,-sz),
-	}
+    local cf = part.CFrame
+    local sx, sy, sz = part.Size.X/2, part.Size.Y/2, part.Size.Z/2
+    return {
+        cf * Vector3.new( sx,  sy,  sz), -- 1
+        cf * Vector3.new(-sx,  sy,  sz), -- 2
+        cf * Vector3.new( sx, -sy,  sz), -- 3
+        cf * Vector3.new( sx,  sy, -sz), -- 4
+        cf * Vector3.new(-sx, -sy,  sz), -- 5
+        cf * Vector3.new( sx, -sy, -sz), -- 6
+        cf * Vector3.new(-sx,  sy, -sz), -- 7
+        cf * Vector3.new(-sx, -sy, -sz), -- 8
+    }
 end
 
 RunService.RenderStepped:Connect(function()
-	local s = rmonnesy_esp.settings
-	if not s.enabled then
-		for _,esp in pairs(esp_objects) do
-			for _,obj in pairs(esp) do
-				if type(obj)=="table" then for _,o in pairs(obj) do o.Visible=false end
-				else obj.Visible=false end
+	if not rmonnesy_esp.settings.enabled then
+		for _, esp in pairs(esp_objects) do
+			for _, obj in pairs(esp) do
+				if type(obj) == "table" then
+					for _, o in pairs(obj) do
+						pcall(function() o.Visible = false end)
+					end
+				else
+					pcall(function() obj.Visible = false end)
+				end
 			end
 		end
 		return
 	end
 
-	local lp_char = LocalPlayer.Character
-	if not lp_char then return end
-	local lp_root = lp_char:FindFirstChild("HumanoidRootPart")
-	if not lp_root then return end
-	local lp_pos = lp_root.Position
-	local now = tick()
+	local ok, err = pcall(function()
+		local lp_char = LocalPlayer and LocalPlayer.Character
+		if not lp_char then return end
+		local lp_root = lp_char:FindFirstChild("HumanoidRootPart")
+		if not lp_root then return end
 
-	for player,esp in pairs(esp_objects) do
-		local char = player.Character
-		if not char then for _,v in pairs(esp) do if type(v)=="table" then for _,o in pairs(v) do o.Visible=false end else v.Visible=false end end continue end
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		local root = char:FindFirstChild("HumanoidRootPart")
-		local head = char:FindFirstChild("Head")
-		if not hum or not root or hum.Health<=0 then for _,v in pairs(esp) do if type(v)=="table" then for _,o in pairs(v) do o.Visible=false end else v.Visible=false end end continue end
+		local lp_pos = lp_root.Position
+		local now = tick()
 
-		local dist = (lp_pos - root.Position).Magnitude
-		if dist > s.max_distance then for _,v in pairs(esp) do if type(v)=="table" then for _,o in pairs(v) do o.Visible=false end else v.Visible=false end end continue end
+		for player, esp in pairs(esp_objects) do
+			local skip = false
 
-		local color, scaleT = get_player_color(player, dist, now)
-		local scale = lerp(s.min_scale, s.max_scale, scaleT)
-		local transparency = clamp(scaleT * 0.8 + 0.2, 0.25, 1) 
+			local success, char = pcall(function()
+				return player.Character
+			end)
+
+			if not success or not char then
+				-- hide ESP for missing character
+				for _, v in pairs(esp) do
+					if type(v) == "table" then
+						for _, o in pairs(v) do
+							pcall(function() o.Visible = false end)
+						end
+					else
+						pcall(function() v.Visible = false end)
+					end
+				end
+				skip = true
+			end
+
+			if skip then
+				continue
+			end
+
+			local humanoid = char:FindFirstChildOfClass("Humanoid")
+			local root = char:FindFirstChild("HumanoidRootPart")
+			local head = char:FindFirstChild("Head")
+
+			if not humanoid or not root or humanoid.Health <= 0 then
+				for _, v in pairs(esp) do
+					if type(v) == "table" then
+						for _, o in pairs(v) do
+							pcall(function() o.Visible = false end)
+						end
+					else
+						pcall(function() v.Visible = false end)
+					end
+				end
+				continue
+			end
+
+			local dist = (lp_pos - root.Position).Magnitude
+			if dist > rmonnesy_esp.settings.max_distance then
+				for _, v in pairs(esp) do
+					if type(v) == "table" then
+						for _, o in pairs(v) do
+							pcall(function() o.Visible = false end)
+						end
+					else
+						pcall(function() v.Visible = false end)
+					end
+				end
+				continue
+			end
+
+            local color, scaleT = get_player_color(player, dist, now)
+            local scale = lerp(rmonnesy_esp.settings.min_scale, rmonnesy_esp.settings.max_scale, scaleT)
+            local transparency = clamp(1 - scaleT, 0, 0.95) -- more distant = more transparent
 
             local minX, minY = math.huge, math.huge
             local maxX, maxY = -math.huge, -math.huge
@@ -462,16 +624,27 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-function rmonnesy_esp.toggle(name,val)
-	if rmonnesy_esp.settings[name]~=nil then rmonnesy_esp.settings[name]=val end
+function rmonnesy_esp.toggle(name, value)
+    if rmonnesy_esp.settings[name] ~= nil then rmonnesy_esp.settings[name] = value end
 end
-function rmonnesy_esp.set_color_mode(mode) rmonnesy_esp.settings.color_mode=mode end
-function rmonnesy_esp.add_friend(name) rmonnesy_esp.friends[name]=true end
-function rmonnesy_esp.remove_friend(name) rmonnesy_esp.friends[name]=nil end
+function rmonnesy_esp.set_color_mode(mode)
+    rmonnesy_esp.settings.color_mode = mode
+end
+function rmonnesy_esp.add_friend(name)
+    rmonnesy_esp.friends[name] = true
+end
+function rmonnesy_esp.remove_friend(name)
+    rmonnesy_esp.friends[name] = nil
+end
 function rmonnesy_esp.destroy()
-	for p in pairs(esp_objects) do remove_esp(p) end
-	esp_objects = {}
+    for p,_ in pairs(esp_objects) do remove_esp(p) end
+    esp_objects = {}
 end
 
-if not Drawing then error("Drawing API not found in this environment") end
+pcall(function()
+    if not Drawing then
+        error("Drawing API not found in this environment")
+    end
+end)
+
 return rmonnesy_esp
