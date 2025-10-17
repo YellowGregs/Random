@@ -139,7 +139,8 @@ end
 
 local function recursive_hide(drawing, skip_cham)
     if type(drawing) == "userdata" then
-        if drawing ~= skip_cham and drawing.Visible ~= nil then
+        local success, vis = pcall(function() return drawing.Visible end)
+        if success and vis ~= nil and drawing ~= skip_cham then
             pcall(function() drawing.Visible = false end)
         end
     elseif type(drawing) == "table" then
@@ -507,7 +508,8 @@ local function update_esp()
                                         local skeleton_line = create("Line", {
                                             Thickness = ESP_SETTINGS.skeletons.thickness,
                                             Color = ESP_SETTINGS.skeletons.color,
-                                            Transparency = ESP_SETTINGS.skeletons.transparency
+                                            Transparency = ESP_SETTINGS.skeletons.transparency,
+                                            Visible = false
                                         })
                                         table.insert(esp.skeleton_lines, {skeleton_line, parent_bone, child_bone})
                                     end
@@ -526,6 +528,11 @@ local function update_esp()
                                     skeleton_line.Visible = true
                                     skeleton_line.Transparency = ESP_SETTINGS.skeletons.transparency
                                 end
+                            end
+                        end
+                        if not ESP_SETTINGS.skeletons.show then
+                            for _, line_data in ipairs(esp.skeleton_lines) do
+                                if line_data[1] then line_data[1].Visible = false end
                             end
                         end
 
