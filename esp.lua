@@ -1,650 +1,664 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
+local localPlayer = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local cache = {}
+local connections = {}
 
-local safe = {}
-
-safe.isfile = function(name)
-    local ok, res = pcall(function() return isfile and isfile(name) or false end)
-    return ok and res or false
-end
-
-safe.readfile = function(name)
-    local ok, res = pcall(function() return readfile and readfile(name) or nil end)
-    return ok and res
-end
-
-safe.writefile = function(name, content)
-    pcall(function()
-        if writefile then
-            writefile(name, content)
-        end
-    end)
-end
-
-safe.append_log = function(name, content)
-    pcall(function()
-        local existing = ""
-        if safe.isfile(name) then
-            existing = safe.readfile(name) or ""
-        end
-        safe.writefile(name, existing .. content .. "\n")
-    end)
-end
-
-local LOG_FILE = "rmonnesy_esp_errors.txt"
-
-local function log_error(err)
-    local msg = string.format("[%s] %s", os.date(), tostring(err))
-    safe.append_log(LOG_FILE, msg)
-end
-
-local function clamp(x, a, b) return math.max(a, math.min(b, x)) end
-local function lerp(a,b,t) return a + (b-a)*t end
-local function ColorLerp(c1, c2, t)
-    return Color3.new(lerp(c1.R, c2.R, t), lerp(c1.G, c2.G, t), lerp(c1.B, c2.B, t))
-end
---erm
-local function world_to_screen(position)
-    local success, sx, sy, onScreen = pcall(function()
-        local p, vis = Camera:WorldToViewportPoint(position)
-        return p, p.X, p.Y, vis
-    end)
-    if not success then return nil, nil, false end
-    return Vector2.new(sx, sy), onScreen
-end
-
-local rmonnesy_esp = {}
-
-rmonnesy_esp.settings = {
-    enabled = true,
-    max_distance = 5000,
-    text_size = 18,
-    font = 2,
-
-    box_esp = true,         --  (2D/3D/corner)
-    box_type = "3d",       -- "2d", "3d", "corner"
-    skeleton_esp = true,
-    offscreen_arrow_esp = true,
-    tracer_esp = true,
-    lookat_esp = true,
-    head_esp = false,       -- small head circle (optional)
-    health_esp = true,
-    name_esp = true,
-    distance_esp = true,
-    outline_esp = true,
-    -- cham_esp = false,     -- COMMENTED OUT FOR LATER IMPLEMENTATION
-
-    -- color settings
-    color_mode = "team",   -- "team", "static", "rainbow", "per-player"
-    static_color = Color3.fromRGB(255,255,255),
-    friend_color = Color3.fromRGB(0,255,0),
-    enemy_color = Color3.fromRGB(255,0,0),
-    neutral_color = Color3.fromRGB(160,160,160),
-
-    -- scaling & fading
-    min_scale = 0.35,
-    max_scale = 1.0,
-    fade_to_color = Color3.fromRGB(110,110,110), -- color to lerp to when distant
-
-    -- visuals
-    tracer_color = Color3.fromRGB(255,255,255),
-    health_color = Color3.fromRGB(0,255,0),
-
-    -- offscreen arrow
-    arrow_size = 20,
+local bones_r15 = {
+    {"Head", "UpperTorso"},
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"RightLowerArm", "RightHand"},
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"LeftLowerArm", "LeftHand"},
+    {"UpperTorso", "LowerTorso"},
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LeftLowerLeg", "LeftFoot"},
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"},
+    {"RightLowerLeg", "RightFoot"}
 }
 
--- optional 
-rmonnesy_esp.friends = {
-    -- player names here for "friend" marking
-    -- ["CoolFriendName"] = true,
+local bones_r6 = {
+    {"Head", "Torso"},
+    {"Torso", "Left Arm"},
+    {"Left Arm", "Left Leg"},
+    {"Torso", "Right Arm"},
+    {"Right Arm", "Right Leg"}
 }
 
-local esp_objects = {}
+local ESP_SETTINGS = {
+    box = {
+        outline_color = Color3.new(0, 0, 0),
+        color = Color3.new(1, 1, 1),
+        enabled = true,
+        show = true,
+        type = "3D",
+        outline_thickness = 2,
+        transparency = 0.9,
+        corner_length = 0.25
+    },
+    name = {
+        color = Color3.new(1, 1, 1),
+        show = true,
+        font_size = 12,
+        font = 2,
+        transparency = 1,
+        outline = true
+    },
+    health = {
+        outline_color = Color3.new(0, 0, 0),
+        high_color = Color3.new(0, 1, 0),
+        low_color = Color3.new(1, 0, 0),
+        show = true,
+        bar_thickness = 3,
+        transparency = 0.8
+    },
+    distance = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        font_size = 11,
+        font = 2,
+        transparency = 0.9,
+        max_distance = math.huge
+    },
+    skeletons = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        thickness = 1,
+        transparency = 0.7
+    },
+    tracer = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        thickness = 2,
+        position = "Bottom",
+        transparency = 0.6
+    },
+    offscreen = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        size = 25,
+        thickness = 2,
+        transparency = 0.9
+    },
+    chams = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        outline_color = Color3.new(0, 0, 0),
+        fill_transparency = 0.4,
+        outline = true
+    },
+    lookat = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        length = 8,
+        thickness = 1,
+        transparency = 0.8
+    },
+    head_circle = {
+        show = true,
+        color = Color3.new(1, 1, 1),
+        radius = 2.5,
+        sides = 16,
+        thickness = 1,
+        transparency = 0.8
+    },
+    general = {
+        teamcheck = false,
+        wallcheck = false,
+        enabled = true
+    }
+}
 
-local function rainbowColor(t)
-    local r = math.floor((math.sin(t*1.3)+1)*127.5)
-    local g = math.floor((math.sin(t*1.7 + 2)+1)*127.5)
-    local b = math.floor((math.sin(t*1.9 + 4)+1)*127.5)
-    return Color3.fromRGB(r,g,b)
+-- API CHECK
+local Drawing = getgenv().Drawing
+if not Drawing or not Drawing.new then
+    error("Drawing Library not found for this executor")
+end
+
+local function create(class, properties)
+    local drawing = Drawing.new(class)
+    for property, value in pairs(properties) do
+        drawing[property] = value
+    end
+    return drawing
+end
+
+local function recursive_remove(drawing)
+    if type(drawing) == "userdata" and drawing.Remove then
+        pcall(drawing.Remove, drawing)
+    elseif type(drawing) == "table" then
+        for _, item in pairs(drawing) do
+            recursive_remove(item)
+        end
+    end
+end
+
+local function recursive_hide(drawing, skip_cham)
+    if type(drawing) == "userdata" then
+        if drawing ~= skip_cham and drawing.Visible ~= nil then
+            pcall(function() drawing.Visible = false end)
+        end
+    elseif type(drawing) == "table" then
+        for _, item in pairs(drawing) do
+            recursive_hide(item, skip_cham)
+        end
+    end
+end
+
+local function cleanup()
+    for player, esp in pairs(cache) do
+        remove_esp(player)
+    end
+    cache = {}
+    if connections.render then
+        pcall(function() connections.render:Disconnect() end)
+    end
 end
 
 local function create_esp(player)
-    local ok, err = pcall(function()
-        local objs = {}
+    local esp = {
+        box_outline = create("Square", {
+            Color = ESP_SETTINGS.box.outline_color,
+            Thickness = ESP_SETTINGS.box.outline_thickness,
+            Filled = false,
+            Visible = false,
+            Transparency = ESP_SETTINGS.box.transparency
+        }),
+        box = create("Square", {
+            Color = ESP_SETTINGS.box.color,
+            Thickness = 1,
+            Filled = false,
+            Visible = false,
+            Transparency = ESP_SETTINGS.box.transparency
+        }),
+        box_lines = {},
+        box_3d_lines = {},
+        name = create("Text", {
+            Color = ESP_SETTINGS.name.color,
+            Outline = ESP_SETTINGS.name.outline,
+            Center = true,
+            Size = ESP_SETTINGS.name.font_size,
+            Font = ESP_SETTINGS.name.font,
+            Visible = false,
+            Transparency = ESP_SETTINGS.name.transparency
+        }),
+        health_outline = create("Line", {
+            Thickness = ESP_SETTINGS.health.bar_thickness,
+            Color = ESP_SETTINGS.health.outline_color,
+            Visible = false,
+            Transparency = ESP_SETTINGS.health.transparency
+        }),
+        health = create("Line", {
+            Thickness = 2,
+            Visible = false,
+            Transparency = ESP_SETTINGS.health.transparency
+        }),
+        distance = create("Text", {
+            Color = ESP_SETTINGS.distance.color,
+            Size = ESP_SETTINGS.distance.font_size,
+            Font = ESP_SETTINGS.distance.font,
+            Outline = true,
+            Center = true,
+            Visible = false,
+            Transparency = ESP_SETTINGS.distance.transparency
+        }),
+        tracer = create("Line", {
+            Thickness = ESP_SETTINGS.tracer.thickness,
+            Color = ESP_SETTINGS.tracer.color,
+            Transparency = ESP_SETTINGS.tracer.transparency,
+            Visible = false
+        }),
+        skeleton_lines = {},
+        arrow_outline = create("Quad", {
+            Color = ESP_SETTINGS.offscreen.color,
+            Thickness = 2,
+            Filled = false,
+            Visible = false,
+            Transparency = ESP_SETTINGS.offscreen.transparency
+        }),
+        arrow = create("Quad", {
+            Color = ESP_SETTINGS.offscreen.color,
+            Thickness = 0,
+            Filled = true,
+            Visible = false,
+            Transparency = ESP_SETTINGS.offscreen.transparency
+        }),
+        lookat_line = create("Line", {
+            Thickness = ESP_SETTINGS.lookat.thickness,
+            Color = ESP_SETTINGS.lookat.color,
+            Visible = false,
+            Transparency = ESP_SETTINGS.lookat.transparency
+        }),
+        head_circle_lines = {},
+        cham = Instance.new("Highlight")
+    }
 
-        -- box (Square for 2D/corner; Line objects for 3D box)
-        objs.box = Drawing.new("Square")
-        objs.box.Thickness = 1
-        objs.box.Filled = false
-        objs.box.Visible = false
+    esp.cham.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    esp.cham.FillTransparency = ESP_SETTINGS.chams.fill_transparency
+    esp.cham.OutlineTransparency = ESP_SETTINGS.chams.outline and 0 or 1
+    esp.cham.FillColor = ESP_SETTINGS.chams.color
+    esp.cham.OutlineColor = ESP_SETTINGS.chams.outline_color
+    esp.cham.Enabled = false
 
-        -- corner box lines (4 lines)
-        objs.corner_lines = {}
-        for i=1,4 do
-            local l = Drawing.new("Line")
-            l.Thickness = 1
-            l.Visible = false
-            table.insert(objs.corner_lines, l)
-        end
-
-        -- 3D box lines (12 edges)
-        objs.box_3d = {}
-        for i=1,12 do
-            local l = Drawing.new("Line")
-            l.Thickness = 1
-            l.Visible = false
-            table.insert(objs.box_3d, l)
-        end
-
-        -- skeleton lines (head->torso, torso->limbs)
-        objs.skeleton = {}
-        for i=1,10 do
-            local l = Drawing.new("Line")
-            l.Thickness = 1
-            l.Visible = false
-            table.insert(objs.skeleton, l)
-        end
-
-        -- tracer
-        objs.tracer = Drawing.new("Line")
-        objs.tracer.Thickness = 1
-        objs.tracer.Visible = false
-
-        -- lookat line
-        objs.lookat = Drawing.new("Line")
-        objs.lookat.Thickness = 1
-        objs.lookat.Visible = false
-
-        -- head circle
-        objs.head_circle = Drawing.new("Circle")
-        objs.head_circle.Thickness = 1
-        objs.head_circle.Filled = false
-        objs.head_circle.Visible = false
-
-        -- name and distance text
-        objs.name_text = Drawing.new("Text")
-        objs.name_text.Size = rmonnesy_esp.settings.text_size
-        objs.name_text.Center = true
-        objs.name_text.Visible = false
-
-        objs.distance_text = Drawing.new("Text")
-        objs.distance_text.Size = rmonnesy_esp.settings.text_size - 2
-        objs.distance_text.Center = true
-        objs.distance_text.Visible = false
-
-        -- health bar
-        objs.health_bar = Drawing.new("Square")
-        objs.health_bar.Filled = true
-        objs.health_bar.Visible = false
-
-        -- offscreen arrow (triangle made of 3 lines)
-        objs.arrow = {}
-        for i=1,3 do
-            local l = Drawing.new("Line")
-            l.Thickness = 1
-            l.Visible = false
-            table.insert(objs.arrow, l)
-        end
-
-        esp_objects[player] = objs
-    end)
-    if not ok then
-        log_error(err)
+    for i = 1, 8 do
+        table.insert(esp.box_lines, create("Line", {
+            Thickness = 1.5,
+            Color = ESP_SETTINGS.box.color,
+            Visible = false,
+            Transparency = ESP_SETTINGS.box.transparency
+        }))
     end
+
+    for i = 1, 12 do
+        table.insert(esp.box_3d_lines, create("Line", {
+            Thickness = 1,
+            Color = ESP_SETTINGS.box.color,
+            Visible = false,
+            Transparency = ESP_SETTINGS.box.transparency
+        }))
+    end
+
+    for i = 1, ESP_SETTINGS.head_circle.sides do
+        table.insert(esp.head_circle_lines, create("Line", {
+            Thickness = ESP_SETTINGS.head_circle.thickness,
+            Color = ESP_SETTINGS.head_circle.color,
+            Visible = false,
+            Transparency = ESP_SETTINGS.head_circle.transparency
+        }))
+    end
+
+    cache[player] = esp
+end
+
+local function is_player_behind_wall(player)
+    local character = player.Character
+    if not character then return false end
+    local root_part = character:FindFirstChild("HumanoidRootPart")
+    if not root_part then return false end
+    local ray = Ray.new(camera.CFrame.Position, (root_part.Position - camera.CFrame.Position).Unit * (root_part.Position - camera.CFrame.Position).Magnitude)
+    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character, character})
+    return hit and hit:IsA("Part")
 end
 
 local function remove_esp(player)
-    local ok, err = pcall(function()
-        local esp = esp_objects[player]
-        if not esp then return end
-        for k, v in pairs(esp) do
-            if type(v) == "table" then
-                for _,obj in pairs(v) do
-                    pcall(function() obj:Remove() end)
-                end
-            else
-                pcall(function() v:Remove() end)
-            end
-        end
-        esp_objects[player] = nil
-    end)
-    if not ok then log_error(err) end
-end
-
-for _, pl in pairs(Players:GetPlayers()) do
-    if pl ~= LocalPlayer then create_esp(pl) end
-end
-
-Players.PlayerAdded:Connect(function(pl)
-    if pl ~= LocalPlayer then
-        pcall(function() create_esp(pl) end)
+    local esp = cache[player]
+    if not esp then return end
+    if esp.cham then
+        esp.cham:Destroy()
     end
-end)
-Players.PlayerRemoving:Connect(function(pl) remove_esp(pl) end)
-
-local function get_player_color(player, dist, now)
-    local settings = rmonnesy_esp.settings
-    local base
-    if settings.color_mode == "static" then
-        base = settings.static_color
-    elseif settings.color_mode == "rainbow" then
-        base = rainbowColor(now + (player and player.UserId or 0) * 0.0001)
-    elseif settings.color_mode == "per-player" then
-        -- per-player custom: use hash of name
-        local h = 0
-        for i=1,#player.Name do h = h + player.Name:byte(i) end
-        base = rainbowColor(h * 0.01 + now)
-    else -- team/default
-        local isFriend = rmonnesy_esp.friends[player.Name]
-        if isFriend then
-            base = settings.friend_color
-        else
-            local success, same = pcall(function()
-                return (player.Team ~= nil and LocalPlayer.Team ~= nil) and (player.Team == LocalPlayer.Team)
-            end)
-            if success and same then
-                base = settings.friend_color
-            else
-                if player.Team and LocalPlayer.Team and player.Team ~= LocalPlayer.Team then
-                    base = settings.enemy_color
-                else
-                    base = settings.neutral_color
-                end
-            end
+    for key, drawing in pairs(esp) do
+        if key ~= "cham" then
+            recursive_remove(drawing)
         end
     end
-
-    local t = clamp(1 - dist / settings.max_distance, 0, 1)
-    t = clamp((t - 0) / (1 - 0), 0, 1)
-    local faded = ColorLerp(settings.fade_to_color, base, t)
-    return faded, t
+    cache[player] = nil
 end
 
---  for 3d box edges
-local function get_part_corners(part)
-    local cf = part.CFrame
-    local sx, sy, sz = part.Size.X/2, part.Size.Y/2, part.Size.Z/2
-    return {
-        cf * Vector3.new( sx,  sy,  sz), -- 1
-        cf * Vector3.new(-sx,  sy,  sz), -- 2
-        cf * Vector3.new( sx, -sy,  sz), -- 3
-        cf * Vector3.new( sx,  sy, -sz), -- 4
-        cf * Vector3.new(-sx, -sy,  sz), -- 5
-        cf * Vector3.new( sx, -sy, -sz), -- 6
-        cf * Vector3.new(-sx,  sy, -sz), -- 7
-        cf * Vector3.new(-sx, -sy, -sz), -- 8
+local function get_bones(character)
+    if character:FindFirstChild("UpperTorso") then
+        return bones_r15
+    else
+        return bones_r6
+    end
+end
+
+local function get_3d_box_points(root_part)
+    local cf = root_part.CFrame
+    local size = Vector3.new(5, 7, 2)
+    local corners = {
+        cf * CFrame.new(-size.X/2, -size.Y/2, -size.Z/2),
+        cf * CFrame.new( size.X/2, -size.Y/2, -size.Z/2),
+        cf * CFrame.new( size.X/2,  size.Y/2, -size.Z/2),
+        cf * CFrame.new(-size.X/2,  size.Y/2, -size.Z/2),
+        cf * CFrame.new(-size.X/2, -size.Y/2,  size.Z/2),
+        cf * CFrame.new( size.X/2, -size.Y/2,  size.Z/2),
+        cf * CFrame.new( size.X/2,  size.Y/2,  size.Z/2),
+        cf * CFrame.new(-size.X/2,  size.Y/2,  size.Z/2)
     }
+    return corners
 end
 
-RunService.RenderStepped:Connect(function()
-	if not rmonnesy_esp.settings.enabled then
-		for _, esp in pairs(esp_objects) do
-			for _, obj in pairs(esp) do
-				if type(obj) == "table" then
-					for _, o in pairs(obj) do
-						pcall(function() o.Visible = false end)
-					end
-				else
-					pcall(function() obj.Visible = false end)
-				end
-			end
-		end
-		return
-	end
+local function update_esp()
+    local players = Players:GetPlayers()
+    for _, player in ipairs(players) do
+        if player ~= localPlayer then
+            local esp = cache[player]
+            if not esp then
+                create_esp(player)
+                esp = cache[player]
+            end
+            
+            local character = player.Character
+            local team = player.Team
+            if character and (not ESP_SETTINGS.general.teamcheck or (team and team ~= localPlayer.Team)) then
+                local root_part = character:FindFirstChild("HumanoidRootPart")
+                local head = character:FindFirstChild("Head")
+                local humanoid = character:FindFirstChild("Humanoid")
+                local foot = character:FindFirstChild("LeftFoot") or character:FindFirstChild("Left Leg")
+                local is_behind_wall = ESP_SETTINGS.general.wallcheck and is_player_behind_wall(player)
+                local should_show = not is_behind_wall and ESP_SETTINGS.general.enabled
 
-	local ok, err = pcall(function()
-		local lp_char = LocalPlayer and LocalPlayer.Character
-		if not lp_char then return end
-		local lp_root = lp_char:FindFirstChild("HumanoidRootPart")
-		if not lp_root then return end
+                if root_part and head and humanoid and foot and should_show then
+                    local distance = (camera.CFrame.Position - root_part.Position).Magnitude
+                    if distance > ESP_SETTINGS.distance.max_distance then
+                        recursive_hide(esp, esp.cham)
+                        esp.cham.Parent = nil
+                        esp.cham.Enabled = false
+                        continue
+                    end
+                    
+                    local position, on_screen = camera:WorldToViewportPoint(root_part.Position)
+                    local head_pos, _ = camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                    local foot_pos, _ = camera:WorldToViewportPoint(foot.Position - Vector3.new(0, 0.5, 0))
+                    local lookat_end, _ = camera:WorldToViewportPoint(head.Position + head.CFrame.LookVector * ESP_SETTINGS.lookat.length)
+                    
+                    local box_height = math.abs(head_pos.Y - foot_pos.Y)
+                    local box_width = box_height * 0.5
+                    local box_size = Vector2.new(math.floor(box_width), math.floor(box_height))
+                    local center_x = math.floor((head_pos.X + foot_pos.X) / 2)
+                    local center_y = math.floor((head_pos.Y + foot_pos.Y) / 2)
+                    local box_position = Vector2.new(center_x - box_size.X / 2, center_y - box_size.Y / 2)
 
-		local lp_pos = lp_root.Position
-		local now = tick()
+                    if on_screen then
+                        esp.arrow_outline.Visible = false
+                        esp.arrow.Visible = false
 
-		for player, esp in pairs(esp_objects) do
-			local skip = false
-
-			local success, char = pcall(function()
-				return player.Character
-			end)
-
-			if not success or not char then
-				-- hide ESP for missing character
-				for _, v in pairs(esp) do
-					if type(v) == "table" then
-						for _, o in pairs(v) do
-							pcall(function() o.Visible = false end)
-						end
-					else
-						pcall(function() v.Visible = false end)
-					end
-				end
-				skip = true
-			end
-
-			if skip then
-				continue
-			end
-
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
-			local root = char:FindFirstChild("HumanoidRootPart")
-			local head = char:FindFirstChild("Head")
-
-			if not humanoid or not root or humanoid.Health <= 0 then
-				for _, v in pairs(esp) do
-					if type(v) == "table" then
-						for _, o in pairs(v) do
-							pcall(function() o.Visible = false end)
-						end
-					else
-						pcall(function() v.Visible = false end)
-					end
-				end
-				continue
-			end
-
-			local dist = (lp_pos - root.Position).Magnitude
-			if dist > rmonnesy_esp.settings.max_distance then
-				for _, v in pairs(esp) do
-					if type(v) == "table" then
-						for _, o in pairs(v) do
-							pcall(function() o.Visible = false end)
-						end
-					else
-						pcall(function() v.Visible = false end)
-					end
-				end
-				continue
-			end
-
-            local color, scaleT = get_player_color(player, dist, now)
-            local scale = lerp(rmonnesy_esp.settings.min_scale, rmonnesy_esp.settings.max_scale, scaleT)
-            local transparency = clamp(1 - scaleT, 0, 0.95) -- more distant = more transparent
-
-            local minX, minY = math.huge, math.huge
-            local maxX, maxY = -math.huge, -math.huge
-            local anyOnScreen = false
-            local parts = {}
-            for _, part in pairs(char:GetChildren()) do
-                if part:IsA("BasePart") then
-                    table.insert(parts, part)
-                    local corners = get_part_corners(part)
-                    for _, c in pairs(corners) do
-                        local p, onScreen = Camera:WorldToViewportPoint(c)
-                        if onScreen then
-                            anyOnScreen = true
-                            minX = math.min(minX, p.X)
-                            minY = math.min(minY, p.Y)
-                            maxX = math.max(maxX, p.X)
-                            maxY = math.max(maxY, p.Y)
+                        if ESP_SETTINGS.chams.show then
+                            esp.cham.Parent = character
+                            esp.cham.FillColor = ESP_SETTINGS.chams.color
+                            esp.cham.OutlineColor = ESP_SETTINGS.chams.outline_color
+                            esp.cham.FillTransparency = ESP_SETTINGS.chams.fill_transparency
+                            esp.cham.OutlineTransparency = ESP_SETTINGS.chams.outline and 0 or 1
+                            esp.cham.Enabled = true
+                        else
+                            esp.cham.Parent = nil
+                            esp.cham.Enabled = false
                         end
-                    end
-                end
-            end
 
-            if not anyOnScreen then
-                -- offscreen arrow handling
-                if rmonnesy_esp.settings.offscreen_arrow_esp then
-                    if head then
-                        local camP = Camera.CFrame.Position
-                        local dir = (root.Position - camP).Unit
-                        local angle = math.atan2(dir.Z, dir.X)
-                        local screenCenter = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-                        local toScreen = (Vector2.new(root.Position.X, root.Position.Z) - Vector2.new(camP.X, camP.Z))
-                        local angle2 = math.atan2(toScreen.Y, toScreen.X)
-                        -- clamp arrow pos to edge
-                        local cx, cy = screenCenter.X, screenCenter.Y
-                        local m = math.tan(angle2)
-                        local edgeX = cx + math.cos(angle2) * (math.min(cx,cy) - 30)
-                        local edgeY = cy + math.sin(angle2) * (math.min(cx,cy) - 30)
-
-                        -- triangle points
-                        local size = rmonnesy_esp.settings.arrow_size * scale
-                        local p1 = Vector2.new(edgeX, edgeY)
-                        local p2 = Vector2.new(edgeX + math.cos(angle2 + math.pi*0.7) * size, edgeY + math.sin(angle2 + math.pi*0.7) * size)
-                        local p3 = Vector2.new(edgeX + math.cos(angle2 - math.pi*0.7) * size, edgeY + math.sin(angle2 - math.pi*0.7) * size)
-
-                        -- draw
-                        for i,line in pairs(esp.arrow) do line.Visible = true end
-                        esp.arrow[1].From = p1; esp.arrow[1].To = p2
-                        esp.arrow[2].From = p2; esp.arrow[2].To = p3
-                        esp.arrow[3].From = p3; esp.arrow[3].To = p1
-                        for _,line in pairs(esp.arrow) do
-                            line.Color = color
-                            line.Transparency = transparency
+                        if ESP_SETTINGS.name.show then
+                            esp.name.Visible = true
+                            esp.name.Text = string.lower(player.Name)
+                            esp.name.Position = Vector2.new(center_x, head_pos.Y - 18)
+                            esp.name.Color = ESP_SETTINGS.name.color
+                            esp.name.Size = ESP_SETTINGS.name.font_size
+                            esp.name.Font = ESP_SETTINGS.name.font
+                            esp.name.Transparency = ESP_SETTINGS.name.transparency
+                        else
+                            esp.name.Visible = false
                         end
+
+                        if ESP_SETTINGS.box.show then
+                            if ESP_SETTINGS.box.type == "2D" then
+                                esp.box_outline.Size = box_size
+                                esp.box_outline.Position = box_position
+                                esp.box_outline.Visible = true
+                                esp.box_outline.Transparency = ESP_SETTINGS.box.transparency
+                                esp.box.Size = box_size
+                                esp.box.Position = box_position
+                                esp.box.Color = ESP_SETTINGS.box.color
+                                esp.box.Visible = true
+                                esp.box.Transparency = ESP_SETTINGS.box.transparency
+                                for _, line in ipairs(esp.box_lines) do line.Visible = false end
+                                for _, line in ipairs(esp.box_3d_lines) do line.Visible = false end
+                                
+                            elseif ESP_SETTINGS.box.type == "3D" then
+                                local corners = get_3d_box_points(root_part)
+                                local points_2d = {}
+                                for i, corner in ipairs(corners) do
+                                    local pos, _ = camera:WorldToViewportPoint(corner.Position)
+                                    points_2d[i] = Vector2.new(pos.X, pos.Y)
+                                end
+                                
+                                local edges = {
+                                    {1,2},{2,3},{3,4},{4,1},
+                                    {5,6},{6,7},{7,8},{8,5},
+                                    {1,5},{2,6},{3,7},{4,8}
+                                }
+                                
+                                for i, edge in ipairs(edges) do
+                                    local line = esp.box_3d_lines[i]
+                                    line.From = points_2d[edge[1]]
+                                    line.To = points_2d[edge[2]]
+                                    line.Color = ESP_SETTINGS.box.color
+                                    line.Visible = true
+                                    line.Transparency = ESP_SETTINGS.box.transparency
+                                end
+                                
+                                esp.box_outline.Visible = false
+                                esp.box.Visible = false
+                                for _, line in ipairs(esp.box_lines) do line.Visible = false end
+                                
+                            else
+                                local line_length = math.min(box_size.X, box_size.Y) * ESP_SETTINGS.box.corner_length
+                                
+                                local lines = {
+                                    {box_position.X, box_position.Y, box_position.X + line_length, box_position.Y},
+                                    {box_position.X, box_position.Y, box_position.X, box_position.Y + line_length},
+                                    {box_position.X + box_size.X, box_position.Y, box_position.X + box_size.X - line_length, box_position.Y},
+                                    {box_position.X + box_size.X, box_position.Y, box_position.X + box_size.X, box_position.Y + line_length},
+                                    {box_position.X, box_position.Y + box_size.Y, box_position.X + line_length, box_position.Y + box_size.Y},
+                                    {box_position.X, box_position.Y + box_size.Y, box_position.X, box_position.Y + box_size.Y - line_length},
+                                    {box_position.X + box_size.X, box_position.Y + box_size.Y, box_position.X + box_size.X - line_length, box_position.Y + box_size.Y},
+                                    {box_position.X + box_size.X, box_position.Y + box_size.Y, box_position.X + box_size.X, box_position.Y + box_size.Y - line_length}
+                                }
+                                
+                                for i, line_data in ipairs(lines) do
+                                    local line = esp.box_lines[i]
+                                    line.From = Vector2.new(line_data[1], line_data[2])
+                                    line.To = Vector2.new(line_data[3], line_data[4])
+                                    line.Color = ESP_SETTINGS.box.color
+                                    line.Visible = true
+                                    line.Transparency = ESP_SETTINGS.box.transparency
+                                end
+                                
+                                esp.box_outline.Visible = false
+                                esp.box.Visible = false
+                                for _, line in ipairs(esp.box_3d_lines) do line.Visible = false end
+                            end
+                        else
+                            esp.box_outline.Visible = false
+                            esp.box.Visible = false
+                            for _, line in ipairs(esp.box_lines) do line.Visible = false end
+                            for _, line in ipairs(esp.box_3d_lines) do line.Visible = false end
+                        end
+
+                        if ESP_SETTINGS.health.show then
+                            esp.health_outline.Visible = true
+                            esp.health_outline.From = Vector2.new(box_position.X - 6, head_pos.Y)
+                            esp.health_outline.To = Vector2.new(esp.health_outline.From.X, foot_pos.Y)
+                            esp.health_outline.Transparency = ESP_SETTINGS.health.transparency
+                            esp.health.Visible = true
+                            esp.health.From = Vector2.new(box_position.X - 4, foot_pos.Y)
+                            esp.health.To = Vector2.new(esp.health.From.X, foot_pos.Y - (humanoid.Health / humanoid.MaxHealth * box_height))
+                            esp.health.Color = ESP_SETTINGS.health.low_color:lerp(ESP_SETTINGS.health.high_color, humanoid.Health / humanoid.MaxHealth)
+                            esp.health.Transparency = ESP_SETTINGS.health.transparency
+                        else
+                            esp.health_outline.Visible = false
+                            esp.health.Visible = false
+                        end
+
+                        if ESP_SETTINGS.distance.show then
+                            esp.distance.Text = string.format("%.0fm", distance)
+                            esp.distance.Position = Vector2.new(center_x, foot_pos.Y + 6)
+                            esp.distance.Visible = true
+                            esp.distance.Color = ESP_SETTINGS.distance.color
+                            esp.distance.Size = ESP_SETTINGS.distance.font_size
+                            esp.distance.Font = ESP_SETTINGS.distance.font
+                            esp.distance.Transparency = ESP_SETTINGS.distance.transparency
+                        else
+                            esp.distance.Visible = false
+                        end
+
+                        if ESP_SETTINGS.skeletons.show then
+                            local bones = get_bones(character)
+                            if #esp.skeleton_lines == 0 then
+                                for _, bone_pair in ipairs(bones) do
+                                    local parent_bone, child_bone = bone_pair[1], bone_pair[2]
+                                    if character:FindFirstChild(parent_bone) and character:FindFirstChild(child_bone) then
+                                        local skeleton_line = create("Line", {
+                                            Thickness = ESP_SETTINGS.skeletons.thickness,
+                                            Color = ESP_SETTINGS.skeletons.color,
+                                            Transparency = ESP_SETTINGS.skeletons.transparency
+                                        })
+                                        table.insert(esp.skeleton_lines, {skeleton_line, parent_bone, child_bone})
+                                    end
+                                end
+                            end
+
+                            for _, line_data in ipairs(esp.skeleton_lines) do
+                                local skeleton_line = line_data[1]
+                                local parent_bone, child_bone = line_data[2], line_data[3]
+                                if character:FindFirstChild(parent_bone) and character:FindFirstChild(child_bone) then
+                                    local parent_pos = camera:WorldToViewportPoint(character[parent_bone].Position)
+                                    local child_pos = camera:WorldToViewportPoint(character[child_bone].Position)
+                                    skeleton_line.From = Vector2.new(parent_pos.X, parent_pos.Y)
+                                    skeleton_line.To = Vector2.new(child_pos.X, child_pos.Y)
+                                    skeleton_line.Color = ESP_SETTINGS.skeletons.color
+                                    skeleton_line.Visible = true
+                                    skeleton_line.Transparency = ESP_SETTINGS.skeletons.transparency
+                                end
+                            end
+                        end
+
+                        if ESP_SETTINGS.tracer.show then
+                            local tracer_y = camera.ViewportSize.Y
+                            esp.tracer.Visible = true
+                            esp.tracer.From = Vector2.new(camera.ViewportSize.X / 2, tracer_y)
+                            esp.tracer.To = Vector2.new(center_x, center_y)
+                            esp.tracer.Transparency = ESP_SETTINGS.tracer.transparency
+                        else
+                            esp.tracer.Visible = false
+                        end
+
+                        if ESP_SETTINGS.lookat.show then
+                            esp.lookat_line.Visible = true
+                            esp.lookat_line.From = Vector2.new(head_pos.X, head_pos.Y)
+                            esp.lookat_line.To = Vector2.new(lookat_end.X, lookat_end.Y)
+                            esp.lookat_line.Transparency = ESP_SETTINGS.lookat.transparency
+                        else
+                            esp.lookat_line.Visible = false
+                        end
+
+                        if ESP_SETTINGS.head_circle.show then
+                            local radius_2d = (camera:WorldToViewportPoint(head.Position + head.CFrame.RightVector * ESP_SETTINGS.head_circle.radius)).X - head_pos.X
+                            local angle_step = 2 * math.pi / ESP_SETTINGS.head_circle.sides
+                            for i = 1, ESP_SETTINGS.head_circle.sides do
+                                local angle1 = (i - 1) * angle_step
+                                local angle2 = i * angle_step
+                                local p1 = Vector2.new(head_pos.X + math.cos(angle1) * radius_2d, head_pos.Y + math.sin(angle1) * radius_2d)
+                                local p2 = Vector2.new(head_pos.X + math.cos(angle2) * radius_2d, head_pos.Y + math.sin(angle2) * radius_2d)
+                                local line = esp.head_circle_lines[i]
+                                line.From = p1
+                                line.To = p2
+                                line.Visible = true
+                                line.Transparency = ESP_SETTINGS.head_circle.transparency
+                            end
+                        else
+                            for _, line in ipairs(esp.head_circle_lines) do line.Visible = false end
+                        end
+
+                    else
+                        if ESP_SETTINGS.offscreen.show then
+                            local screen_center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                            local direction = (Vector2.new(position.X, position.Y) - screen_center).Unit
+                            local angle = math.atan2(direction.Y, direction.X)
+                            local clamped_pos = screen_center + direction * math.min(ESP_SETTINGS.offscreen.size * 4, 120)
+                            
+                            local arrow_size = ESP_SETTINGS.offscreen.size
+                            local base_points = {
+                                Vector2.new(0, 0),
+                                Vector2.new(-arrow_size * 0.3, arrow_size * 0.8),
+                                Vector2.new(arrow_size * 0.3, arrow_size * 0.8)
+                            }
+                            
+                            local rotated_points = {}
+                            for _, p in ipairs(base_points) do
+                                local cos_a = math.cos(angle + math.pi / 2)
+                                local sin_a = math.sin(angle + math.pi / 2)
+                                local dx = p.X * cos_a - p.Y * sin_a
+                                local dy = p.X * sin_a + p.Y * cos_a
+                                table.insert(rotated_points, clamped_pos + Vector2.new(dx, dy))
+                            end
+                            
+                            esp.arrow_outline.PointA = rotated_points[1]
+                            esp.arrow_outline.PointB = rotated_points[2]
+                            esp.arrow_outline.PointC = rotated_points[3]
+                            esp.arrow_outline.PointD = rotated_points[1]
+                            esp.arrow_outline.Color = ESP_SETTINGS.offscreen.color
+                            esp.arrow_outline.Transparency = ESP_SETTINGS.offscreen.transparency
+                            esp.arrow_outline.Visible = true
+                            
+                            esp.arrow.PointA = rotated_points[1]
+                            esp.arrow.PointB = rotated_points[2]
+                            esp.arrow.PointC = rotated_points[3]
+                            esp.arrow.PointD = rotated_points[1]
+                            esp.arrow.Color = ESP_SETTINGS.offscreen.color
+                            esp.arrow.Transparency = ESP_SETTINGS.offscreen.transparency
+                            esp.arrow.Visible = true
+                        else
+                            esp.arrow_outline.Visible = false
+                            esp.arrow.Visible = false
+                        end
+
+                        esp.box_outline.Visible = false
+                        esp.box.Visible = false
+                        esp.name.Visible = false
+                        esp.health_outline.Visible = false
+                        esp.health.Visible = false
+                        esp.distance.Visible = false
+                        esp.tracer.Visible = false
+                        esp.lookat_line.Visible = false
+                        for _, line in ipairs(esp.box_lines) do line.Visible = false end
+                        for _, line in ipairs(esp.box_3d_lines) do line.Visible = false end
+                        for _, line in ipairs(esp.head_circle_lines) do line.Visible = false end
+                        for _, line_data in ipairs(esp.skeleton_lines) do
+                            if line_data[1] then line_data[1].Visible = false end
+                        end
+                        esp.cham.Parent = nil
+                        esp.cham.Enabled = false
                     end
+                else
+                    recursive_hide(esp, esp.cham)
+                    esp.cham.Parent = nil
+                    esp.cham.Enabled = false
                 end
-
-                for _, v in pairs(esp) do
-                    if type(v) == "table" and v ~= esp.arrow then for _,o in pairs(v) do pcall(function() o.Visible = false end) end
-                    elseif v ~= esp.arrow then pcall(function() v.Visible = false end) end
-                end
-
-                continue
             else
-                for _,line in pairs(esp.arrow) do line.Visible = false end
-            end
-
-            local x, y = minX, minY
-            local w, h = maxX - minX, maxY - minY
-            w = math.max(w, 6) h = math.max(h, 6)
-
-            if rmonnesy_esp.settings.box_esp then
-                if rmonnesy_esp.settings.box_type == "2d" then
-                    esp.box.Position = Vector2.new(x, y)
-                    esp.box.Size = Vector2.new(w, h)
-                    esp.box.Color = color
-                    esp.box.Transparency = transparency
-                    esp.box.Visible = true
-                    -- hide other box forms
-                    for i,line in pairs(esp.box_3d) do line.Visible = false end
-                    for i,line in pairs(esp.corner_lines) do line.Visible = false end
-                elseif rmonnesy_esp.settings.box_type == "corner" then
-                    esp.box.Visible = false
-                    -- corner lengths
-                    local cl = math.clamp(math.min(w,h)*0.25, 6, 40) * scale
-                    -- top-left
-                    esp.corner_lines[1].From = Vector2.new(x, y)
-                    esp.corner_lines[1].To = Vector2.new(x + cl, y)
-                    esp.corner_lines[2].From = Vector2.new(x, y)
-                    esp.corner_lines[2].To = Vector2.new(x, y + cl)
-                    -- top-right
-                    esp.corner_lines[3].From = Vector2.new(x + w, y)
-                    esp.corner_lines[3].To = Vector2.new(x + w - cl, y)
-                    esp.corner_lines[4].From = Vector2.new(x + w, y)
-                    esp.corner_lines[4].To = Vector2.new(x + w, y + cl)
-                    for i,line in pairs(esp.corner_lines) do
-                        line.Color = color
-                        line.Transparency = transparency
-                        line.Visible = true
-                    end
-                    for i,line in pairs(esp.box_3d) do line.Visible = false end
-                else -- 3d
-                    esp.box.Visible = false
-                    local corners_world = {}
-                    for _,part in pairs(parts) do
-                        local cs = get_part_corners(part)
-                        for _,c in pairs(cs) do table.insert(corners_world, c) end
-                    end
-                    local minv = Vector3.new(math.huge, math.huge, math.huge)
-                    local maxv = Vector3.new(-math.huge, -math.huge, -math.huge)
-                    for _,v in pairs(corners_world) do
-                        minv = Vector3.new(math.min(minv.X, v.X), math.min(minv.Y, v.Y), math.min(minv.Z, v.Z))
-                        maxv = Vector3.new(math.max(maxv.X, v.X), math.max(maxv.Y, v.Y), math.max(maxv.Z, v.Z))
-                    end
-                    local b_corners = {
-                        Vector3.new(minv.X, minv.Y, minv.Z), Vector3.new(maxv.X, minv.Y, minv.Z), Vector3.new(maxv.X, maxv.Y, minv.Z), Vector3.new(minv.X, maxv.Y, minv.Z),
-                        Vector3.new(minv.X, minv.Y, maxv.Z), Vector3.new(maxv.X, minv.Y, maxv.Z), Vector3.new(maxv.X, maxv.Y, maxv.Z), Vector3.new(minv.X, maxv.Y, maxv.Z),
-                    }
-                    local edges = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
-                    for i,edge in pairs(edges) do
-                        local a, b = b_corners[edge[1]], b_corners[edge[2]]
-                        local pa, va = Camera:WorldToViewportPoint(a)
-                        local pb, vb = Camera:WorldToViewportPoint(b)
-                        esp.box_3d[i].From = Vector2.new(pa.X, pa.Y)
-                        esp.box_3d[i].To = Vector2.new(pb.X, pb.Y)
-                        esp.box_3d[i].Color = color
-                        esp.box_3d[i].Transparency = transparency
-                        esp.box_3d[i].Visible = true
-                    end
-                    for i,line in pairs(esp.corner_lines) do line.Visible = false end
+                local esp = cache[player]
+                if esp then
+                    recursive_hide(esp, esp.cham)
+                    esp.cham.Parent = nil
+                    esp.cham.Enabled = false
                 end
-            else
-                esp.box.Visible = false
-                for i,line in pairs(esp.box_3d) do line.Visible = false end
-                for i,line in pairs(esp.corner_lines) do line.Visible = false end
             end
-
-            -- skeleton
-            if rmonnesy_esp.settings.skeleton_esp then
-                local hp = head and head.Position or nil
-                local rootp = root.Position
-                local neck = (head and (char:FindFirstChild("Neck") and char:FindFirstChild("Neck").C0))
-                local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
-                local larm = char:FindFirstChild("LeftUpperArm") or char:FindFirstChild("Left Arm")
-                local rarm = char:FindFirstChild("RightUpperArm") or char:FindFirstChild("Right Arm")
-                local lleg = char:FindFirstChild("LeftUpperLeg") or char:FindFirstChild("Left Leg")
-                local rleg = char:FindFirstChild("RightUpperLeg") or char:FindFirstChild("Right Leg")
-
-                local points = {}
-                if head then table.insert(points, head.Position) end
-                if torso then table.insert(points, torso.Position) end
-                if larm then table.insert(points, larm.Position) end
-                if rarm then table.insert(points, rarm.Position) end
-                if lleg then table.insert(points, lleg.Position) end
-                if rleg then table.insert(points, rleg.Position) end
-
-                -- head->torso, torso->limbs
-                local screenPoints = {}
-                for i,p in pairs(points) do
-                    local s, on = Camera:WorldToViewportPoint(p)
-                    screenPoints[i] = {vec = Vector2.new(s.X, s.Y), on = on}
-                end
-
-                -- map: 1=head,2=torso,3=larm,4=rarm,5=lleg,6=rleg
-                -- draw lines
-                local sk = esp.skeleton
-                -- head->torso
-                if screenPoints[1] and screenPoints[2] then
-                    sk[1].From = screenPoints[1].vec; sk[1].To = screenPoints[2].vec; sk[1].Visible = true
-                else sk[1].Visible = false end
-                -- torso->larm
-                if screenPoints[2] and screenPoints[3] then sk[2].From = screenPoints[2].vec; sk[2].To = screenPoints[3].vec; sk[2].Visible = true else sk[2].Visible = false end
-                -- torso->rarm
-                if screenPoints[2] and screenPoints[4] then sk[3].From = screenPoints[2].vec; sk[3].To = screenPoints[4].vec; sk[3].Visible = true else sk[3].Visible = false end
-                -- torso->lleg
-                if screenPoints[2] and screenPoints[5] then sk[4].From = screenPoints[2].vec; sk[4].To = screenPoints[5].vec; sk[4].Visible = true else sk[4].Visible = false end
-                -- torso->rleg
-                if screenPoints[2] and screenPoints[6] then sk[5].From = screenPoints[2].vec; sk[5].To = screenPoints[6].vec; sk[5].Visible = true else sk[5].Visible = false end
-
-                for i=1,#sk do
-                    sk[i].Color = color
-                    sk[i].Transparency = transparency
-                end
-            else
-                for i=1,#esp.skeleton do esp.skeleton[i].Visible = false end
-            end
-
-            -- name, distance, health, tracer, head circle, lookat
-            if rmonnesy_esp.settings.name_esp then
-                esp.name_text.Text = player.Name
-                esp.name_text.Position = Vector2.new(x + w/2, y - 14 * scale)
-                esp.name_text.Size = rmonnesy_esp.settings.text_size * scale
-                esp.name_text.Color = color
-                esp.name_text.Outline = rmonnesy_esp.settings.outline_esp
-                esp.name_text.Visible = true
-            else esp.name_text.Visible = false end
-
-            if rmonnesy_esp.settings.distance_esp then
-                esp.distance_text.Text = string.format("%.0f studs", dist)
-                esp.distance_text.Position = Vector2.new(x + w/2, y + h + 6 * scale)
-                esp.distance_text.Size = (rmonnesy_esp.settings.text_size - 2) * scale
-                esp.distance_text.Color = color
-                esp.distance_text.Visible = true
-            else esp.distance_text.Visible = false end
-
-            if rmonnesy_esp.settings.health_esp and humanoid then
-                local hp_ratio = clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-                local bh = h * hp_ratio
-                local bw = math.max(2, 4 * scale)
-                esp.health_bar.Position = Vector2.new(x - bw - 4, y + h - bh)
-                esp.health_bar.Size = Vector2.new(bw, bh)
-                esp.health_bar.Color = Color3.fromHSV(0.33 * hp_ratio, 1, 1)
-                esp.health_bar.Transparency = transparency
-                esp.health_bar.Visible = true
-            else esp.health_bar.Visible = false end
-
-            if rmonnesy_esp.settings.tracer_esp then
-                local root_screen, vis = Camera:WorldToViewportPoint(root.Position)
-                if vis then
-                    esp.tracer.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-                    esp.tracer.To = Vector2.new(root_screen.X, root_screen.Y)
-                    esp.tracer.Color = rmonnesy_esp.settings.tracer_color
-                    esp.tracer.Transparency = transparency
-                    esp.tracer.Visible = true
-                else esp.tracer.Visible = false end
-            else esp.tracer.Visible = false end
-
-            if rmonnesy_esp.settings.head_esp and head then
-                local head_screen, vis = Camera:WorldToViewportPoint(head.Position)
-                if vis then
-                    esp.head_circle.Position = Vector2.new(head_screen.X, head_screen.Y)
-                    esp.head_circle.Radius = 6 * scale
-                    esp.head_circle.Color = color
-                    esp.head_circle.Transparency = transparency
-                    esp.head_circle.Visible = true
-                else esp.head_circle.Visible = false end
-            else esp.head_circle.Visible = false end
-
-            if rmonnesy_esp.settings.lookat_esp and head then
-                local lookvec = (head.CFrame.LookVector)
-                local from = head.Position
-                local to = from + lookvec * math.clamp(dist, 4, 50)
-                local sf, visf = Camera:WorldToViewportPoint(from)
-                local st, vist = Camera:WorldToViewportPoint(to)
-                if visf and vist then
-                    esp.lookat.From = Vector2.new(sf.X, sf.Y)
-                    esp.lookat.To = Vector2.new(st.X, st.Y)
-                    esp.lookat.Color = color
-                    esp.lookat.Transparency = transparency
-                    esp.lookat.Visible = true
-                else esp.lookat.Visible = false end
-            else esp.lookat.Visible = false end
-
-            continue
         end
-    end)
-    if not ok then
-        log_error(err)
+    end
+end
+
+cleanup()
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= localPlayer then
+        create_esp(player)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= localPlayer then
+        create_esp(player)
     end
 end)
 
-function rmonnesy_esp.toggle(name, value)
-    if rmonnesy_esp.settings[name] ~= nil then rmonnesy_esp.settings[name] = value end
-end
-function rmonnesy_esp.set_color_mode(mode)
-    rmonnesy_esp.settings.color_mode = mode
-end
-function rmonnesy_esp.add_friend(name)
-    rmonnesy_esp.friends[name] = true
-end
-function rmonnesy_esp.remove_friend(name)
-    rmonnesy_esp.friends[name] = nil
-end
-function rmonnesy_esp.destroy()
-    for p,_ in pairs(esp_objects) do remove_esp(p) end
-    esp_objects = {}
-end
-
-pcall(function()
-    if not Drawing then
-        error("Drawing API not found in this environment")
-    end
+Players.PlayerRemoving:Connect(function(player)
+    remove_esp(player)
 end)
 
-return rmonnesy_esp
+connections.render = RunService.RenderStepped:Connect(update_esp)
+
+print("RMonnesy Esp Library V1.1 Working - AdvanceFalling Team")
+print("Original Credit: YellowGreg & Linemaster")
+return ESP_SETTINGS
