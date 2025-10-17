@@ -102,7 +102,7 @@ local ESP_SETTINGS = {
     head_circle = {
         show = true,
         color = Color3.new(1, 1, 1),
-        radius = 2.5,
+        radius = 1.2,
         sides = 16,
         thickness = 1,
         transparency = 0.8
@@ -114,7 +114,6 @@ local ESP_SETTINGS = {
     }
 }
 
--- API CHECK
 local Drawing = getgenv().Drawing
 if not Drawing or not Drawing.new then
     error("Drawing Library not found for this executor")
@@ -288,14 +287,19 @@ end
 local function remove_esp(player)
     local esp = cache[player]
     if not esp then return end
+    
+    recursive_hide(esp, nil)
+    
     if esp.cham then
-        esp.cham:Destroy()
+        esp.cham.Parent = nil
+        esp.cham.Enabled = false
+        pcall(function() esp.cham:Destroy() end)
     end
+    
     for key, drawing in pairs(esp) do
-        if key ~= "cham" then
-            recursive_remove(drawing)
-        end
+        recursive_remove(drawing)
     end
+    
     cache[player] = nil
 end
 
