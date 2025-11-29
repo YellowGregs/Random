@@ -1,13 +1,13 @@
 {
   "name": "FluxusZ",
-  "version": "V2.0.5",
+  "version": "V3.0.0",
   "ApkLink": {
-    "32": "https://www.mediafire.com/file/86zt92uym1w88of/FluxusZ+32Bits+V2.0.5.apk/file",
+    "32": "",
     "64": "https://www.mediafire.com/file/6dynt8mfxyamioo/FluxusZ+64bits+V2.0.5.apk/file"
   },
   "vng": {
-    "32": "https://www.mediafire.com/file/cqobpnwej76x4ks/FluxusZ+VNG+32Bits(stable).apk/file",
-    "64": "https://www.mediafire.com/file/znyktwqm0hqkm4n/FluxusZ+VNG+64Bits(stable).apk/file"
+    "32": "",
+    "64": ""
   },
   "WindowsLink": "",
   "ExternalLink": "",
