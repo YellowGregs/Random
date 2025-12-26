@@ -1,5 +1,5 @@
-local WallyUI = {}
-WallyUI.__index = WallyUI
+local AF_UI = {}
+AF_UI.__index = AF_UI
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -34,10 +34,10 @@ local function Tween(object, properties, duration, easingStyle, easingDirection)
     return tween
 end
 
-function WallyUI.new(options)
+function AF_UI.new(options)
     options = options or {}
     
-    local self = setmetatable({}, WallyUI)
+    local self = setmetatable({}, AF_UI)
     
     self.Enabled = false
     self.Theme = options.Theme or "Dark"
@@ -46,7 +46,7 @@ function WallyUI.new(options)
     self.Blur = options.Blur or false
     
     self.ScreenGui = Create("ScreenGui", {
-        Name = "WallyUIV3",
+        Name = "AF_UIV3",
         DisplayOrder = 99,
         ResetOnSpawn = false
     })
@@ -59,7 +59,7 @@ function WallyUI.new(options)
     
     if self.Blur then
         self.BlurEffect = Create("BlurEffect", {
-            Name = "WallyUIBlur",
+            Name = "AF_UIBlur",
             Size = 8,
             Parent = game:GetService("Lighting")
         })
@@ -68,11 +68,11 @@ function WallyUI.new(options)
     return self
 end
 
-function WallyUI:Window(options)
+function AF_UI:Window(options)
     options = options or {}
     
     local Window = {}
-    Window.Title = options.Title or "Wally UI V3"
+    Window.Title = options.Title or "AF UI V3"
     Window.Size = options.Size or UDim2.new(0, 500, 0, 400)
     Window.Position = options.Position or UDim2.new(0.5, -250, 0.5, -200)
     Window.Visible = options.Visible or false
@@ -220,7 +220,6 @@ function WallyUI:Window(options)
         Tween(CloseButton, {TextColor3 = self.Theme == "Dark" and Colors.Light or Colors.Dark})
     end)
     
-    -- Methods
     function Window:Toggle()
         self.Visible = not self.Visible
         MainFrame.Visible = self.Visible
@@ -894,7 +893,7 @@ function WallyUI:Window(options)
     return Window
 end
 
-function WallyUI:Toggle()
+function AF_UI:Toggle()
     self.Enabled = not self.Enabled
     self.ScreenGui.Enabled = self.Enabled
     
@@ -907,14 +906,14 @@ function WallyUI:Toggle()
     end
 end
 
-function WallyUI:Destroy()
+function AF_UI:Destroy()
     self.ScreenGui:Destroy()
     if self.BlurEffect then
         self.BlurEffect:Destroy()
     end
 end
 
-function WallyUI:Notify(options)
+function AF_UI:Notify(options)
     options = options or {}
     
     local Notification = Create("Frame", {
@@ -983,7 +982,7 @@ function WallyUI:Notify(options)
     end)
 end
 
-function WallyUI:Keybind(options)
+function AF_UI:Keybind(options)
     options = options or {}
     local Keybind = {}
     Keybind.Key = options.Key or Enum.KeyCode.F
@@ -1034,10 +1033,12 @@ function WallyUI:Keybind(options)
     return Keybind
 end
 
-function WallyUI:Watermark(text)
-    text = text or "Wally UI V3"
+function AF_UI:Watermark(text)
+    text = text or "AF UI V3"
     
-    local Watermark = Create("Frame", {
+    local Watermark = {}
+    
+    local WatermarkFrame = Create("Frame", {
         Name = "Watermark",
         Size = UDim2.new(0, 200, 0, 30),
         Position = UDim2.new(0, 10, 0, 10),
@@ -1047,13 +1048,13 @@ function WallyUI:Watermark(text)
     
     Create("UICorner", {
         CornerRadius = UDim.new(0, 6),
-        Parent = Watermark
+        Parent = WatermarkFrame
     })
     
     Create("UIStroke", {
         Color = self.AccentColor,
         Thickness = 2,
-        Parent = Watermark
+        Parent = WatermarkFrame
     })
     
     local WatermarkText = Create("TextLabel", {
@@ -1064,7 +1065,7 @@ function WallyUI:Watermark(text)
         TextColor3 = Colors.Light,
         TextSize = 14,
         Font = Enum.Font.GothamSemibold,
-        Parent = Watermark
+        Parent = WatermarkFrame
     })
     
     local dragging
@@ -1074,14 +1075,14 @@ function WallyUI:Watermark(text)
     
     local function UpdateWatermarkInput(input)
         local delta = input.Position - dragStart
-        Watermark.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        WatermarkFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
     
-    Watermark.InputBegan:Connect(function(input)
+    WatermarkFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
-            startPos = Watermark.Position
+            startPos = WatermarkFrame.Position
             
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
@@ -1091,7 +1092,7 @@ function WallyUI:Watermark(text)
         end
     end)
     
-    Watermark.InputChanged:Connect(function(input)
+    WatermarkFrame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = input
         end
@@ -1108,10 +1109,22 @@ function WallyUI:Watermark(text)
     end
     
     function Watermark:Destroy()
-        Watermark:Destroy()
+        WatermarkFrame:Destroy()
+    end
+    
+    function Watermark:GetFrame()
+        return WatermarkFrame
+    end
+    
+    function Watermark:SetVisible(visible)
+        WatermarkFrame.Visible = visible
+    end
+    
+    function Watermark:IsVisible()
+        return WatermarkFrame.Visible
     end
     
     return Watermark
 end
 
-return WallyUI
+return AF_UI
