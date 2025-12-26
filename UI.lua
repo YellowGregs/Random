@@ -1,3 +1,5 @@
+-- this is pretty gay
+
 local AF_UI = {}
 AF_UI.__index = AF_UI
 
