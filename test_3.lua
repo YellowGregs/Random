@@ -498,8 +498,8 @@ function Library:Window(title)
 		DropdownArrow.Rotation = 0
 		
 		local DropdownList = Instance.new("Frame")
-		local UIListLayout_list = Instance.new("UIListLayout")
 		local DropdownScroll = Instance.new("ScrollingFrame")
+		local UIListLayout_list = Instance.new("UIListLayout")
 		
 		DropdownList.Name = "DropdownList"
 		DropdownList.Parent = UiLib
@@ -545,7 +545,6 @@ function Library:Window(title)
 		UIListLayout_list.Parent = DropdownScroll
 		UIListLayout_list.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout_list.Padding = UDim.new(0, 4)
-		UIListLayout_list.ZIndex = 21
 		
 		local isOpen = false
 		local selectedOption = nil
