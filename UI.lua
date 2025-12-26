@@ -184,7 +184,9 @@ function AF_UI:Window(options)
         MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
     
+    if TopBar then
     TopBar.InputBegan:Connect(function(input)
+        if not TopBar or not TopBar:IsDescendantOf(game) then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
@@ -615,32 +617,46 @@ function AF_UI:Window(options)
                     end
                 end
                 
-                SliderButton.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = true
-                    end
-                end)
+                if SliderButton then
+                    SliderButton.InputBegan:Connect(function(input)
+                        if not SliderButton or not SliderButton:IsDescendantOf(game) then return end
+
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dragging = true
+                        end
+                    end)
+                end
                 
-                SliderButton.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = false
-                    end
-                end)
+                if SliderButton then
+                    SliderButton.InputEnded:Connect(function(input)
+                        if not SliderButton or not SliderButton:IsDescendantOf(game) then return end
+
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dragging = false
+                        end
+                    end)
+                end
                 
                 UserInputService.InputChanged:Connect(function(input)
-                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    if not dragging then return end
+                    if not SliderTrack or not SliderTrack:IsDescendantOf(game) then
+                        dragging = false
+                        return
+                    end
+
+                    if input.UserInputType == Enum.UserInputType.MouseMovement then
                         local mousePos = UserInputService:GetMouseLocation()
                         local trackAbsPos = SliderTrack.AbsolutePosition
                         local trackAbsSize = SliderTrack.AbsoluteSize
-                        
+
                         local relativeX = (mousePos.X - trackAbsPos.X) / trackAbsSize.X
                         relativeX = math.clamp(relativeX, 0, 1)
-                        
+
                         local value = min + (relativeX * (max - min))
                         UpdateSlider(value)
                     end
                 end)
-                
+
                 UpdateSlider(Slider.Value)
                 Section:UpdateSize()
                 
@@ -975,11 +991,16 @@ function AF_UI:Notify(options)
         Notification:Destroy()
     end)
     
+   if Notification then
     Notification.InputBegan:Connect(function(input)
+        if not Notification or not Notification:IsDescendantOf(game) then return end
+
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             Tween(Notification, {Position = UDim2.new(1, 320, 1, -100)})
-            wait(0.3)
-            Notification:Destroy()
+            task.wait(0.3)
+            if Notification then
+                Notification:Destroy()
+            end
         end
     end)
 end
