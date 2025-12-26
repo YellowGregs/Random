@@ -129,7 +129,6 @@ function Nebula:GetTheme()
 	return self.Theme or DefaultTheme
 end
 
--- Window
 function Nebula:Window(options)
 	options = options or {}
 	local window = {}
@@ -412,7 +411,6 @@ function Nebula:Window(options)
 	return window
 end
 
--- Button
 function Nebula:Button(options)
 	options = options or {}
 	local button = {}
@@ -491,7 +489,6 @@ function Nebula:Button(options)
 	return button
 end
 
--- Toggle
 function Nebula:Toggle(options)
 	options = options or {}
 	local toggle = {}
@@ -518,7 +515,7 @@ function Nebula:Toggle(options)
 				TextSize = 14,
 				TextXAlignment = Enum.TextXAlignment.Left
 			}),
-			Create("Frame", {
+			Create("TextButton", {
 				Name = "Switch",
 				BackgroundColor3 = toggle.Theme.Foreground,
 				BorderColor3 = toggle.Theme.Border,
@@ -527,6 +524,7 @@ function Nebula:Toggle(options)
 				Position = UDim2.new(1, -50, 0.5, -12),
 				Size = UDim2.new(0, 44, 0, 24),
 				AnchorPoint = Vector2.new(1, 0.5),
+				AutoButtonColor = false,
 				
 				Children = {
 					Create("UICorner", {
@@ -559,7 +557,6 @@ function Nebula:Toggle(options)
 	toggle.Circle = toggle.Switch and toggle.Switch:FindFirstChild("ToggleCircle")
 	
 	if not toggle.Switch or not toggle.Circle then
-		error("Failed to create toggle elements")
 		return
 	end
 	
@@ -627,7 +624,6 @@ function Nebula:Toggle(options)
 	return toggle
 end
 
--- Slider
 function Nebula:Slider(options)
 	options = options or {}
 	local slider = {}
@@ -724,7 +720,6 @@ function Nebula:Slider(options)
 	slider.Thumb = slider.Track and slider.Track:FindFirstChild("Thumb")
 	
 	if not slider.Track or not slider.Fill or not slider.Thumb then
-		error("Failed to create slider elements")
 		return
 	end
 	
@@ -825,7 +820,6 @@ function Nebula:Slider(options)
 	return slider
 end
 
--- Dropdown
 function Nebula:Dropdown(options)
 	options = options or {}
 	local dropdown = {}
@@ -895,7 +889,6 @@ function Nebula:Dropdown(options)
 	dropdown.Selector = dropdown.Main:FindFirstChild("Selector")
 	
 	if not dropdown.Selector then
-		error("Failed to create dropdown selector")
 		return
 	end
 	
@@ -1074,7 +1067,6 @@ function Nebula:Dropdown(options)
 	return dropdown
 end
 
--- TextBox
 function Nebula:TextBox(options)
 	options = options or {}
 	local textbox = {}
@@ -1141,7 +1133,6 @@ function Nebula:TextBox(options)
 	textbox.Input = textbox.Main:FindFirstChild("Input")
 	
 	if not textbox.Input then
-		error("Failed to create textbox input")
 		return
 	end
 	
@@ -1195,7 +1186,6 @@ function Nebula:TextBox(options)
 	return textbox
 end
 
--- Label
 function Nebula:Label(options)
 	options = options or {}
 	local label = {}
@@ -1242,7 +1232,6 @@ function Nebula:Label(options)
 	return label
 end
 
--- ColorPicker
 function Nebula:ColorPicker(options)
 	options = options or {}
 	local colorpicker = {}
@@ -1299,12 +1288,10 @@ function Nebula:ColorPicker(options)
 	colorpicker.Preview = colorpicker.Main:FindFirstChild("Preview")
 	
 	if not colorpicker.Preview then
-		error("Failed to create color picker preview")
 		return
 	end
 	
 	colorpicker.Preview.MouseButton1Click:Connect(function()
-			-- w.i.p
 		local colors = {
 			Color3.fromRGB(255, 0, 0),
 			Color3.fromRGB(0, 255, 0),
