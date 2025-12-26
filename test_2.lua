@@ -31,45 +31,48 @@ end
 local Library = {}
 
 function Library:Window(title)
-	local Top = Instance.new("Frame")
+	local MainWindow = Instance.new("Frame")
 	local UICorner = Instance.new("UICorner")
 	local Container = Instance.new("Frame")
-	local TabContainer = Instance.new("Frame")
+	local UIListLayout_2 = Instance.new("UIListLayout")
+	local TopBar = Instance.new("Frame")
 	local Title = Instance.new("TextLabel")
-	local Minimize = Instance.new("ImageButton")
+	local CollapseButton = Instance.new("ImageButton")
 	local Shadow = Instance.new("ImageLabel")
 	local Background = Instance.new("Frame")
 	local UICornerBG = Instance.new("UICorner")
-	local TabButtons = Instance.new("Frame")
-	local TabContent = Instance.new("Frame")
-	
-	Top.Name = "Top"
-	Top.Parent = UiLib
-	Top.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	Top.BorderSizePixel = 0
-	Top.Position = UDim2.new(0, getNextWindowPos(), 0.01, 0)
-	Top.Size = UDim2.new(0, 260, 0, 36)
-	Top.Active = true
-	Top.Draggable = true
+	local TabBar = Instance.new("Frame")
+	local TabContainer = Instance.new("Frame")
+	local TabsContent = Instance.new("Frame")
+	local UIListLayout_Tabs = Instance.new("UIListLayout")
+
+	MainWindow.Name = "MainWindow"
+	MainWindow.Parent = UiLib
+	MainWindow.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	MainWindow.BorderSizePixel = 0
+	MainWindow.Position = UDim2.new(0, getNextWindowPos(), 0.01, 0)
+	MainWindow.Size = UDim2.new(0, 280, 0, 36)
+	MainWindow.Active = true
+	MainWindow.Draggable = true
 
 	UICorner.CornerRadius = UDim.new(0, 8)
-	UICorner.Parent = Top
+	UICorner.Parent = MainWindow
 
 	Background.Name = "Background"
-	Background.Parent = Top
+	Background.Parent = MainWindow
 	Background.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	Background.BorderSizePixel = 0
-	Background.Size = UDim2.new(1, 0, 1, 500)
+	Background.Size = UDim2.new(1, 0, 1, 450)
 	Background.ZIndex = -1
 	
 	UICornerBG.CornerRadius = UDim.new(0, 8)
 	UICornerBG.Parent = Background
 
 	Shadow.Name = "Shadow"
-	Shadow.Parent = Top
+	Shadow.Parent = MainWindow
 	Shadow.BackgroundTransparency = 1.000
 	Shadow.Position = UDim2.new(0, -15, 0, -15)
-	Shadow.Size = UDim2.new(1, 30, 1, 530)
+	Shadow.Size = UDim2.new(1, 30, 1, 480)
 	Shadow.Image = "rbxassetid://5554236805"
 	Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
 	Shadow.ImageTransparency = 0.9
@@ -77,17 +80,15 @@ function Library:Window(title)
 	Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
 	Shadow.ZIndex = -1
 
-	Container.Name = "Container"
-	Container.Parent = Top
-	Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	Container.BackgroundTransparency = 0
-	Container.ClipsDescendants = true
-	Container.Position = UDim2.new(0, 0, 1, 0)
-	Container.Size = UDim2.new(1, 0, 0, 500)
-	Container.ZIndex = 2
+	TopBar.Name = "TopBar"
+	TopBar.Parent = MainWindow
+	TopBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	TopBar.BackgroundTransparency = 1.000
+	TopBar.BorderSizePixel = 0
+	TopBar.Size = UDim2.new(1, 0, 0, 36)
 
 	Title.Name = "Title"
-	Title.Parent = Top
+	Title.Parent = TopBar
 	Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	Title.BackgroundTransparency = 1.000
 	Title.Position = UDim2.new(0.05, 0, 0, 0)
@@ -99,241 +100,261 @@ function Library:Window(title)
 	Title.TextWrapped = true
 	Title.TextXAlignment = Enum.TextXAlignment.Left
 
-	Minimize.Name = "Minimize"
-	Minimize.Parent = Top
-	Minimize.BackgroundTransparency = 1.000
-	Minimize.Position = UDim2.new(0.85, 0, 0.2, 0)
-	Minimize.Rotation = 0
-	Minimize.Size = UDim2.new(0, 24, 0, 24)
-	Minimize.ZIndex = 2
-	Minimize.Image = "rbxassetid://6031094678"
-	Minimize.ImageColor3 = Color3.fromRGB(220, 220, 220)
+	CollapseButton.Name = "CollapseButton"
+	CollapseButton.Parent = TopBar
+	CollapseButton.BackgroundTransparency = 1.000
+	CollapseButton.Position = UDim2.new(0.85, 0, 0.2, 0)
+	CollapseButton.Rotation = 0
+	CollapseButton.Size = UDim2.new(0, 24, 0, 24)
+	CollapseButton.ZIndex = 2
+	CollapseButton.Image = "rbxassetid://6031094678"
+	CollapseButton.ImageColor3 = Color3.fromRGB(220, 220, 220)
+
+	TabBar.Name = "TabBar"
+	TabBar.Parent = MainWindow
+	TabBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	TabBar.BackgroundTransparency = 1.000
+	TabBar.BorderSizePixel = 0
+	TabBar.Position = UDim2.new(0, 0, 1, 0)
+	TabBar.Size = UDim2.new(1, 0, 0, 40)
 
 	TabContainer.Name = "TabContainer"
-	TabContainer.Parent = Container
+	TabContainer.Parent = TabBar
 	TabContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	TabContainer.BackgroundTransparency = 1
-	TabContainer.Size = UDim2.new(1, 0, 1, 0)
-	
-	TabButtons.Name = "TabButtons"
-	TabButtons.Parent = TabContainer
-	TabButtons.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	TabButtons.BackgroundTransparency = 1
-	TabButtons.Size = UDim2.new(1, 0, 0, 30)
-	
-	local TabButtonsLayout = Instance.new("UIListLayout")
-	TabButtonsLayout.Parent = TabButtons
-	TabButtonsLayout.FillDirection = Enum.FillDirection.Horizontal
-	TabButtonsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	TabButtonsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	TabButtonsLayout.Padding = UDim.new(0, 5)
-	
-	TabContent.Name = "TabContent"
-	TabContent.Parent = TabContainer
-	TabContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	TabContent.BackgroundTransparency = 1
-	TabContent.Position = UDim2.new(0, 0, 0, 35)
-	TabContent.Size = UDim2.new(1, 0, 1, -35)
-	
-	local function UZVNGAL_fake_script()
-		local script = Instance.new('Script', Minimize)
+	TabContainer.BackgroundTransparency = 1.000
+	TabContainer.BorderSizePixel = 0
+	TabContainer.Position = UDim2.new(0.05, 0, 0, 0)
+	TabContainer.Size = UDim2.new(0.9, 0, 1, 0)
 
-		script.Parent.MouseButton1Click:Connect(function()
-			if script.Parent.Parent.Container.Size == UDim2.new(1, 0, 0, 500) then 
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 180}):Play();
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
-				script.Parent.Parent.Container:TweenSize(UDim2.new(1, 0, 0, 0), "InOut", "Sine", 0.25, true)
-				game:GetService("TweenService"):Create(Background, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-				game:GetService("TweenService"):Create(Shadow, TweenInfo.new(0.25), {Size = UDim2.new(1, 30, 1, 30)}):Play()
-			else
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 0}):Play();
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25), {ImageColor3 = Color3.fromRGB(220, 220, 220)}):Play()
-				script.Parent.Parent.Container:TweenSize(UDim2.new(1, 0, 0, 500), "InOut", "Sine", 0.2, true)
-				game:GetService("TweenService"):Create(Background, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 1, 500)}):Play()
-				game:GetService("TweenService"):Create(Shadow, TweenInfo.new(0.25), {Size = UDim2.new(1, 30, 1, 530)}):Play()
-			end
-		end)
+	UIListLayout_Tabs.Parent = TabContainer
+	UIListLayout_Tabs.FillDirection = Enum.FillDirection.Horizontal
+	UIListLayout_Tabs.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout_Tabs.Padding = UDim.new(0, 5)
+
+	TabsContent.Name = "TabsContent"
+	TabsContent.Parent = MainWindow
+	TabsContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	TabsContent.BackgroundTransparency = 0
+	TabsContent.ClipsDescendants = true
+	TabsContent.Position = UDim2.new(0, 0, 1, 40)
+	TabsContent.Size = UDim2.new(1, 0, 0, 410)
+	TabsContent.ZIndex = 2
+
+	Container.Name = "Container"
+	Container.Parent = MainWindow
+	Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	Container.BackgroundTransparency = 0
+	Container.ClipsDescendants = true
+	Container.Position = UDim2.new(0, 0, 1, 0)
+	Container.Size = UDim2.new(1, 0, 0, 450)
+	Container.ZIndex = 2
+
+	UIListLayout_2.Parent = Container
+	UIListLayout_2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout_2.Padding = UDim.new(0, 8)
+	UIListLayout_2.VerticalAlignment = Enum.VerticalAlignment.Top
+
+	local isCollapsed = false
+	local function toggleCollapse()
+		isCollapsed = not isCollapsed
+		if isCollapsed then
+			-- Collapse
+			game:GetService("TweenService"):Create(CollapseButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 180}):Play();
+			game:GetService("TweenService"):Create(CollapseButton, TweenInfo.new(0.25), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+			Container:TweenSize(UDim2.new(1, 0, 0, 0), "InOut", "Sine", 0.25, true)
+			TabBar:TweenSize(UDim2.new(1, 0, 0, 0), "InOut", "Sine", 0.25, true)
+			TabsContent:TweenSize(UDim2.new(1, 0, 0, 0), "InOut", "Sine", 0.25, true)
+			game:GetService("TweenService"):Create(Background, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+			game:GetService("TweenService"):Create(Shadow, TweenInfo.new(0.25), {Size = UDim2.new(1, 30, 1, 30)}):Play()
+		else
+			-- Expand
+			game:GetService("TweenService"):Create(CollapseButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 0}):Play();
+			game:GetService("TweenService"):Create(CollapseButton, TweenInfo.new(0.25), {ImageColor3 = Color3.fromRGB(220, 220, 220)}):Play()
+			Container:TweenSize(UDim2.new(1, 0, 0, 450), "InOut", "Sine", 0.2, true)
+			TabBar:TweenSize(UDim2.new(1, 0, 0, 40), "InOut", "Sine", 0.2, true)
+			TabsContent:TweenSize(UDim2.new(1, 0, 0, 410), "InOut", "Sine", 0.2, true)
+			game:GetService("TweenService"):Create(Background, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 1, 450)}):Play()
+			game:GetService("TweenService"):Create(Shadow, TweenInfo.new(0.25), {Size = UDim2.new(1, 30, 1, 480)}):Play()
+		end
 	end
-	coroutine.wrap(UZVNGAL_fake_script)()
+
+	CollapseButton.MouseButton1Click:Connect(toggleCollapse)
 	
 	local Lib = {}
-	local tabs = {}
 	local currentTab = nil
+	local tabContents = {}
+	local tabButtons = {}
 	
-	function Lib:Tab(name)
-		local tabButton = Instance.new("TextButton")
+	function Lib:Tab(tabName)
 		local tabContent = Instance.new("ScrollingFrame")
-		local tabUIList = Instance.new("UIListLayout")
+		local UIListLayout_TabContent = Instance.new("UIListLayout")
+		local tabButton = Instance.new("TextButton")
+		local tabButtonText = Instance.new("TextLabel")
 		
-		tabButton.Name = "TabButton_" .. name
-		tabButton.Parent = TabButtons
+		tabButton.Name = "TabButton_" .. tabName
+		tabButton.Parent = TabContainer
 		tabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 		tabButton.BackgroundTransparency = 0
-		tabButton.Size = UDim2.new(0, 80, 0, 25)
-		tabButton.Font = Enum.Font.GothamMedium
-		tabButton.Text = name
-		tabButton.TextColor3 = Color3.fromRGB(180, 180, 180)
-		tabButton.TextSize = 12
+		tabButton.BorderSizePixel = 0
+		tabButton.Size = UDim2.new(0, 70, 0, 30)
+		tabButton.Font = Enum.Font.SourceSans
+		tabButton.Text = ""
+		tabButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+		tabButton.TextSize = 14.000
 		tabButton.AutoButtonColor = false
 		
 		local UICorner_tab = Instance.new("UICorner")
-		UICorner_tab.CornerRadius = UDim.new(0, 4)
+		UICorner_tab.CornerRadius = UDim.new(0, 6)
 		UICorner_tab.Parent = tabButton
 		
-		tabContent.Name = "TabContent_" .. name
-		tabContent.Parent = TabContent
+		tabButtonText.Name = "TabButtonText"
+		tabButtonText.Parent = tabButton
+		tabButtonText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		tabButtonText.BackgroundTransparency = 1.000
+		tabButtonText.Size = UDim2.new(1, 0, 1, 0)
+		tabButtonText.Font = Enum.Font.GothamMedium
+		tabButtonText.Text = tabName
+		tabButtonText.TextColor3 = Color3.fromRGB(180, 180, 180)
+		tabButtonText.TextSize = 12
+		
+		tabContent.Name = "TabContent_" .. tabName
+		tabContent.Parent = TabsContent
+		tabContent.Active = true
 		tabContent.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-		tabContent.BackgroundTransparency = 1
+		tabContent.BackgroundTransparency = 1.000
+		tabContent.BorderSizePixel = 0
 		tabContent.Size = UDim2.new(1, 0, 1, 0)
 		tabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
 		tabContent.ScrollBarThickness = 3
-		tabContent.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+		tabContent.ScrollBarImageColor3 = Color3.fromRGB(40, 40, 40)
 		tabContent.Visible = false
 		
-		tabUIList.Parent = tabContent
-		tabUIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		tabUIList.SortOrder = Enum.SortOrder.LayoutOrder
-		tabUIList.Padding = UDim.new(0, 8)
+		UIListLayout_TabContent.Parent = tabContent
+		UIListLayout_TabContent.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		UIListLayout_TabContent.SortOrder = Enum.SortOrder.LayoutOrder
+		UIListLayout_TabContent.Padding = UDim.new(0, 8)
+		UIListLayout_TabContent.VerticalAlignment = Enum.VerticalAlignment.Top
 		
-		local tab = {
-			Button = tabButton,
-			Content = tabContent,
-			UIList = tabUIList,
-			Name = name,
-			Folders = {}
-		}
+		tabContents[tabName] = tabContent
+		tabButtons[tabName] = {button = tabButton, text = tabButtonText}
 		
-		table.insert(tabs, tab)
-		
-		if #tabs == 1 then
-			tabButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-			tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		if not currentTab then
+			currentTab = tabName
 			tabContent.Visible = true
-			currentTab = tab
+			tabButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+			tabButtonText.TextColor3 = Color3.fromRGB(255, 255, 255)
 		end
 		
 		tabButton.MouseButton1Click:Connect(function()
-			for _, otherTab in pairs(tabs) do
-				otherTab.Button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-				otherTab.Button.TextColor3 = Color3.fromRGB(180, 180, 180)
-				otherTab.Content.Visible = false
+			if currentTab ~= tabName then
+				if currentTab then
+					tabContents[currentTab].Visible = false
+					tabButtons[currentTab].button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+					tabButtons[currentTab].text.TextColor3 = Color3.fromRGB(180, 180, 180)
+				end
+				
+				currentTab = tabName
+				tabContent.Visible = true
+				tabButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+				tabButtonText.TextColor3 = Color3.fromRGB(255, 255, 255)
 			end
-			
-			tabButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-			tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			tabContent.Visible = true
-			currentTab = tab
+		end)
+		
+		tabButton.MouseEnter:Connect(function()
+			if currentTab ~= tabName then
+				game:GetService("TweenService"):Create(tabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+			end
+		end)
+		
+		tabButton.MouseLeave:Connect(function()
+			if currentTab ~= tabName then
+				game:GetService("TweenService"):Create(tabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}):Play()
+			end
 		end)
 		
 		local TabLib = {}
 		
-		function TabLib:Folder(name)
-			local folderContainer = Instance.new("Frame")
-			local folderHeader = Instance.new("TextButton")
-			local folderArrow = Instance.new("ImageLabel")
-			local folderTitle = Instance.new("TextLabel")
-			local folderContent = Instance.new("Frame")
-			local folderUIList = Instance.new("UIListLayout")
-			
-			folderContainer.Name = "Folder_" .. name
-			folderContainer.Parent = tabContent
-			folderContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-			folderContainer.BorderSizePixel = 0
-			folderContainer.Size = UDim2.new(0.92, 0, 0, 40)
-			
+		function TabLib:Folder(folderName)
+			local FolderContainer = Instance.new("Frame")
 			local UICorner_folder = Instance.new("UICorner")
+			local FolderHeader = Instance.new("Frame")
+			local FolderName = Instance.new("TextLabel")
+			local FolderToggle = Instance.new("ImageButton")
+			local FolderContent = Instance.new("Frame")
+			local UIListLayout_Folder = Instance.new("UIListLayout")
+			
+			FolderContainer.Name = "FolderContainer_" .. folderName
+			FolderContainer.Parent = tabContent
+			FolderContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			FolderContainer.BorderSizePixel = 0
+			FolderContainer.Size = UDim2.new(0.92, 0, 0, 40)
+			FolderContainer.ClipsDescendants = true
+			
 			UICorner_folder.CornerRadius = UDim.new(0, 6)
-			UICorner_folder.Parent = folderContainer
+			UICorner_folder.Parent = FolderContainer
 			
-			folderHeader.Name = "FolderHeader"
-			folderHeader.Parent = folderContainer
-			folderHeader.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-			folderHeader.BackgroundTransparency = 0
-			folderHeader.Size = UDim2.new(1, 0, 0, 40)
-			folderHeader.Font = Enum.Font.SourceSans
-			folderHeader.Text = ""
-			folderHeader.TextColor3 = Color3.fromRGB(0, 0, 0)
-			folderHeader.TextSize = 14
-			folderHeader.AutoButtonColor = false
+			FolderHeader.Name = "FolderHeader"
+			FolderHeader.Parent = FolderContainer
+			FolderHeader.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			FolderHeader.BackgroundTransparency = 1.000
+			FolderHeader.BorderSizePixel = 0
+			FolderHeader.Size = UDim2.new(1, 0, 0, 40)
 			
-			local UICorner_header = Instance.new("UICorner")
-			UICorner_header.CornerRadius = UDim.new(0, 6)
-			UICorner_header.Parent = folderHeader
+			FolderName.Name = "FolderName"
+			FolderName.Parent = FolderHeader
+			FolderName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			FolderName.BackgroundTransparency = 1.000
+			FolderName.Position = UDim2.new(0.05, 0, 0, 0)
+			FolderName.Size = UDim2.new(0.8, 0, 1, 0)
+			FolderName.Font = Enum.Font.GothamMedium
+			FolderName.Text = folderName
+			FolderName.TextColor3 = Color3.fromRGB(220, 220, 220)
+			FolderName.TextSize = 14
+			FolderName.TextXAlignment = Enum.TextXAlignment.Left
 			
-			folderArrow.Name = "FolderArrow"
-			folderArrow.Parent = folderHeader
-			folderArrow.BackgroundTransparency = 1
-			folderArrow.Position = UDim2.new(0.05, 0, 0.25, 0)
-			folderArrow.Size = UDim2.new(0, 20, 0, 20)
-			folderArrow.Image = "rbxassetid://6031094678"
-			folderArrow.ImageColor3 = Color3.fromRGB(180, 180, 180)
-			folderArrow.Rotation = 0
+			FolderToggle.Name = "FolderToggle"
+			FolderToggle.Parent = FolderHeader
+			FolderToggle.BackgroundTransparency = 1.000
+			FolderToggle.Position = UDim2.new(0.85, 0, 0.25, 0)
+			FolderToggle.Rotation = 0
+			FolderToggle.Size = UDim2.new(0, 20, 0, 20)
+			FolderToggle.Image = "rbxassetid://6031094678"
+			FolderToggle.ImageColor3 = Color3.fromRGB(150, 150, 150)
 			
-			folderTitle.Name = "FolderTitle"
-			folderTitle.Parent = folderHeader
-			folderTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			folderTitle.BackgroundTransparency = 1
-			folderTitle.Position = UDim2.new(0.15, 0, 0, 0)
-			folderTitle.Size = UDim2.new(0.8, 0, 1, 0)
-			folderTitle.Font = Enum.Font.GothamMedium
-			folderTitle.Text = name
-			folderTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
-			folderTitle.TextSize = 14
-			folderTitle.TextXAlignment = Enum.TextXAlignment.Left
+			FolderContent.Name = "FolderContent"
+			FolderContent.Parent = FolderContainer
+			FolderContent.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			FolderContent.BackgroundTransparency = 1.000
+			FolderContent.BorderSizePixel = 0
+			FolderContent.Position = UDim2.new(0, 0, 1, 0)
+			FolderContent.Size = UDim2.new(1, 0, 0, 0)
 			
-			folderContent.Name = "FolderContent"
-			folderContent.Parent = folderContainer
-			folderContent.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-			folderContent.BorderSizePixel = 0
-			folderContent.Position = UDim2.new(0, 0, 0, 45)
-			folderContent.Size = UDim2.new(1, 0, 0, 0)
-			folderContent.ClipsDescendants = true
+			UIListLayout_Folder.Parent = FolderContent
+			UIListLayout_Folder.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			UIListLayout_Folder.SortOrder = Enum.SortOrder.LayoutOrder
+			UIListLayout_Folder.Padding = UDim.new(0, 5)
+			UIListLayout_Folder.VerticalAlignment = Enum.VerticalAlignment.Top
 			
-			local UICorner_content = Instance.new("UICorner")
-			UICorner_content.CornerRadius = UDim.new(0, 6)
-			UICorner_content.Parent = folderContent
-			
-			folderUIList.Parent = folderContent
-			folderUIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-			folderUIList.SortOrder = Enum.SortOrder.LayoutOrder
-			folderUIList.Padding = UDim.new(0, 5)
-			
-			local folderOpen = true
-			
-			local function updateFolderSize()
-				local totalHeight = 0
-				for _, child in pairs(folderContent:GetChildren()) do
-					if child:IsA("Frame") and child ~= folderUIList then
-						totalHeight = totalHeight + child.Size.Y.Offset + 5
-					end
+			local isFolderOpen = true
+			local folderElements = {}
+			local function toggleFolder()
+				isFolderOpen = not isFolderOpen
+				if isFolderOpen then
+					game:GetService("TweenService"):Create(FolderToggle, TweenInfo.new(0.2), {Rotation = 0}):Play()
+					FolderContent:TweenSize(UDim2.new(1, 0, 0, #folderElements * 45), "Out", "Sine", 0.2)
+					wait(0.2)
+					FolderContainer:TweenSize(UDim2.new(0.92, 0, 0, 40 + #folderElements * 45), "Out", "Sine", 0.2)
+				else
+					game:GetService("TweenService"):Create(FolderToggle, TweenInfo.new(0.2), {Rotation = -90}):Play()
+					FolderContent:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Sine", 0.2)
+					wait(0.2)
+					FolderContainer:TweenSize(UDim2.new(0.92, 0, 0, 40), "Out", "Sine", 0.2)
 				end
-				folderContent.Size = UDim2.new(1, 0, 0, totalHeight)
-				folderContainer.Size = UDim2.new(0.92, 0, 0, 40 + totalHeight + 5)
-				
-				local tabHeight = 0
-				for _, child in pairs(tabContent:GetChildren()) do
-					if child:IsA("Frame") then
-						tabHeight = tabHeight + child.Size.Y.Offset + 8
-					end
-				end
-				tabContent.CanvasSize = UDim2.new(0, 0, 0, tabHeight + 10)
 			end
 			
-			folderHeader.MouseButton1Click:Connect(function()
-				folderOpen = not folderOpen
-				if folderOpen then
-					game:GetService("TweenService"):Create(folderArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
-					folderContent:TweenSize(UDim2.new(1, 0, 0, folderContent.Size.Y.Offset), "Out", "Sine", 0.2, true, function()
-						updateFolderSize()
-					end)
-				else
-					game:GetService("TweenService"):Create(folderArrow, TweenInfo.new(0.2), {Rotation = -90}):Play()
-					folderContent:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Sine", 0.2, true, function()
-						folderContainer.Size = UDim2.new(0.92, 0, 0, 40)
-						updateFolderSize()
-					end)
-				end
-			end)
+			FolderToggle.MouseButton1Click:Connect(toggleFolder)
+			FolderHeader.MouseButton1Click:Connect(toggleFolder)
 			
 			local FolderLib = {}
 			
@@ -342,15 +363,27 @@ function Library:Window(title)
 				local UICorner_btn = Instance.new("UICorner")
 				local Button = Instance.new("TextButton")
 				local ButtonName = Instance.new("TextLabel")
+				local ButtonHover = Instance.new("Frame")
 				
 				ButtonContainer.Name = "ButtonContainer"
-				ButtonContainer.Parent = folderContent
-				ButtonContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				ButtonContainer.Parent = FolderContent
+				ButtonContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				ButtonContainer.BorderSizePixel = 0
 				ButtonContainer.Size = UDim2.new(0.9, 0, 0, 36)
 				
 				UICorner_btn.CornerRadius = UDim.new(0, 6)
 				UICorner_btn.Parent = ButtonContainer
+				
+				ButtonHover.Name = "ButtonHover"
+				ButtonHover.Parent = ButtonContainer
+				ButtonHover.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				ButtonHover.BackgroundTransparency = 0.9
+				ButtonHover.Size = UDim2.new(1, 0, 1, 0)
+				ButtonHover.Visible = false
+				
+				local UICorner_hover = Instance.new("UICorner")
+				UICorner_hover.CornerRadius = UDim.new(0, 6)
+				UICorner_hover.Parent = ButtonHover
 				
 				Button.Name = "Button"
 				Button.Parent = ButtonContainer
@@ -373,14 +406,24 @@ function Library:Window(title)
 				ButtonName.TextColor3 = Color3.fromRGB(220, 220, 220)
 				ButtonName.TextSize = 14
 				
-				Button.MouseButton1Click:Connect(function()
-					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-					wait(0.1)
+				Button.MouseEnter:Connect(function()
+					ButtonHover.Visible = true
 					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+				end)
+				
+				Button.MouseLeave:Connect(function()
+					ButtonHover.Visible = false
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}):Play()
+				end)
+				
+				Button.MouseButton1Click:Connect(function()
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
+					wait(0.1)
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}):Play()
 					callback()
 				end)
 				
-				updateFolderSize()
+				table.insert(folderElements, ButtonContainer)
 			end
 			
 			function FolderLib:Toggle(name, callback)
@@ -393,8 +436,8 @@ function Library:Window(title)
 				local UICorner_indicator = Instance.new("UICorner")
 				
 				ToggleContainer.Name = "ToggleContainer"
-				ToggleContainer.Parent = folderContent
-				ToggleContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				ToggleContainer.Parent = FolderContent
+				ToggleContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				ToggleContainer.BorderSizePixel = 0
 				ToggleContainer.Size = UDim2.new(0.9, 0, 0, 36)
 				
@@ -406,7 +449,7 @@ function Library:Window(title)
 				ToggleName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 				ToggleName.BackgroundTransparency = 1.000
 				ToggleName.Position = UDim2.new(0.05, 0, 0, 0)
-				ToggleName.Size = UDim2.new(0.7, 0, 1, 0)
+				ToggleName.Size = UDim2.new(0.65, 0, 1, 0)
 				ToggleName.Font = Enum.Font.GothamMedium
 				ToggleName.Text = name
 				ToggleName.TextColor3 = Color3.fromRGB(220, 220, 220)
@@ -417,7 +460,7 @@ function Library:Window(title)
 				Toggle.Parent = ToggleContainer
 				Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 				Toggle.BorderColor3 = Color3.fromRGB(27, 42, 53)
-				Toggle.Position = UDim2.new(0.8, 0, 0.22, 0)
+				Toggle.Position = UDim2.new(0.78, 0, 0.22, 0)
 				Toggle.Size = UDim2.new(0, 40, 0, 20)
 				Toggle.AutoButtonColor = false
 				Toggle.Font = Enum.Font.SourceSans
@@ -453,7 +496,7 @@ function Library:Window(title)
 					callback(Toggled)
 				end)
 				
-				updateFolderSize()
+				table.insert(folderElements, ToggleContainer)
 			end
 			
 			function FolderLib:Slider(name, min, max, default, callback)
@@ -468,8 +511,8 @@ function Library:Window(title)
 				local SliderButton = Instance.new("TextButton")
 				
 				SliderContainer.Name = "SliderContainer"
-				SliderContainer.Parent = folderContent
-				SliderContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				SliderContainer.Parent = FolderContent
+				SliderContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				SliderContainer.BorderSizePixel = 0
 				SliderContainer.Size = UDim2.new(0.9, 0, 0, 50)
 				
@@ -587,7 +630,7 @@ function Library:Window(title)
 					end
 				end)
 				
-				updateFolderSize()
+				table.insert(folderElements, SliderContainer)
 			end
 			
 			function FolderLib:Dropdown(name, options, callback)
@@ -599,8 +642,8 @@ function Library:Window(title)
 				local DropdownSelected = Instance.new("TextLabel")
 				
 				DropdownContainer.Name = "DropdownContainer"
-				DropdownContainer.Parent = folderContent
-				DropdownContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				DropdownContainer.Parent = FolderContent
+				DropdownContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				DropdownContainer.BorderSizePixel = 0
 				DropdownContainer.Size = UDim2.new(0.9, 0, 0, 36)
 				DropdownContainer.ClipsDescendants = false
@@ -763,7 +806,7 @@ function Library:Window(title)
 					end
 				end)
 				
-				updateFolderSize()
+				table.insert(folderElements, DropdownContainer)
 			end
 			
 			function FolderLib:Colorpicker(name, defaultColor, callback)
@@ -775,8 +818,8 @@ function Library:Window(title)
 				local UICorner_preview = Instance.new("UICorner")
 				
 				ColorpickerContainer.Name = "ColorpickerContainer"
-				ColorpickerContainer.Parent = folderContent
-				ColorpickerContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				ColorpickerContainer.Parent = FolderContent
+				ColorpickerContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				ColorpickerContainer.BorderSizePixel = 0
 				ColorpickerContainer.Size = UDim2.new(0.9, 0, 0, 36)
 				
@@ -1211,7 +1254,7 @@ function Library:Window(title)
 				
 				ColorButton.MouseButton1Click:Connect(showColorPicker)
 				
-				updateFolderSize()
+				table.insert(folderElements, ColorpickerContainer)
 			end
 			
 			function FolderLib:Bind(name, defaultKey, callback)
@@ -1219,11 +1262,11 @@ function Library:Window(title)
 				local UICorner_bind = Instance.new("UICorner")
 				local BindName = Instance.new("TextLabel")
 				local BindButton = Instance.new("TextButton")
-				local BindText = Instance.new("TextLabel")
+				local BindKeyText = Instance.new("TextLabel")
 				
 				BindContainer.Name = "BindContainer"
-				BindContainer.Parent = folderContent
-				BindContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				BindContainer.Parent = FolderContent
+				BindContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				BindContainer.BorderSizePixel = 0
 				BindContainer.Size = UDim2.new(0.9, 0, 0, 36)
 				
@@ -1248,62 +1291,74 @@ function Library:Window(title)
 				BindButton.BackgroundTransparency = 0
 				BindButton.Position = UDim2.new(0.7, 0, 0.22, 0)
 				BindButton.Size = UDim2.new(0.25, 0, 0, 20)
-				BindButton.Font = Enum.Font.SourceSans
+				BindButton.Font = Enum.Font.Gotham
 				BindButton.Text = ""
-				BindButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-				BindButton.TextSize = 14.000
+				BindButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+				BindButton.TextSize = 12
 				BindButton.AutoButtonColor = false
 				
 				local UICorner_btn = Instance.new("UICorner")
 				UICorner_btn.CornerRadius = UDim.new(0, 4)
 				UICorner_btn.Parent = BindButton
 				
-				BindText.Name = "BindText"
-				BindText.Parent = BindButton
-				BindText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				BindText.BackgroundTransparency = 1.000
-				BindText.Size = UDim2.new(1, 0, 1, 0)
-				BindText.Font = Enum.Font.Gotham
-				BindText.Text = defaultKey or "None"
-				BindText.TextColor3 = Color3.fromRGB(200, 200, 200)
-				BindText.TextSize = 12
+				BindKeyText.Name = "BindKeyText"
+				BindKeyText.Parent = BindButton
+				BindKeyText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				BindKeyText.BackgroundTransparency = 1.000
+				BindKeyText.Size = UDim2.new(1, 0, 1, 0)
+				BindKeyText.Font = Enum.Font.Gotham
+				BindKeyText.Text = tostring(defaultKey)
+				BindKeyText.TextColor3 = Color3.fromRGB(200, 200, 200)
+				BindKeyText.TextSize = 12
 				
 				local listening = false
 				local currentKey = defaultKey
 				
-				local function setKey(key)
+				local function updateBind(key)
 					currentKey = key
-					BindText.Text = key
+					BindKeyText.Text = tostring(key)
 					callback(key)
-					listening = false
-					game:GetService("TweenService"):Create(BindButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
 				end
 				
 				BindButton.MouseButton1Click:Connect(function()
 					if not listening then
 						listening = true
-						BindText.Text = "..."
-						game:GetService("TweenService"):Create(BindButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
+						BindKeyText.Text = "..."
+						BindButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+						
+						local connection
+						connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+							if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+								updateBind(input.KeyCode.Name)
+								listening = false
+								BindButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+								connection:Disconnect()
+							end
+						end)
+						
+						local cancelConnection
+						cancelConnection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+							if listening and input.UserInputType == Enum.UserInputType.MouseButton1 then
+								local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+								local buttonPos = BindButton.AbsolutePosition
+								local buttonSize = BindButton.AbsoluteSize
+								
+								if not (mousePos.X >= buttonPos.X and mousePos.X <= buttonPos.X + buttonSize.X and
+									   mousePos.Y >= buttonPos.Y and mousePos.Y <= buttonPos.Y + buttonSize.Y) then
+									listening = false
+									BindButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+									BindKeyText.Text = tostring(currentKey)
+									connection:Disconnect()
+									cancelConnection:Disconnect()
+								end
+							end
+						end)
 					end
 				end)
 				
-				local connection
-				connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
-					if listening then
-						local key = input.KeyCode.Name
-						if key == "Escape" or key == "Backspace" then
-							setKey("None")
-						else
-							setKey(key)
-						end
-					elseif currentKey and currentKey ~= "None" then
-						if input.KeyCode.Name == currentKey then
-							callback(currentKey)
-						end
-					end
-				end)
+				updateBind(defaultKey)
 				
-				updateFolderSize()
+				table.insert(folderElements, BindContainer)
 			end
 			
 			function FolderLib:Box(name, placeholder, callback)
@@ -1313,8 +1368,8 @@ function Library:Window(title)
 				local TextBox = Instance.new("TextBox")
 				
 				BoxContainer.Name = "BoxContainer"
-				BoxContainer.Parent = folderContent
-				BoxContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				BoxContainer.Parent = FolderContent
+				BoxContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				BoxContainer.BorderSizePixel = 0
 				BoxContainer.Size = UDim2.new(0.9, 0, 0, 36)
 				
@@ -1333,8 +1388,10 @@ function Library:Window(title)
 				BoxName.TextSize = 14
 				BoxName.TextXAlignment = Enum.TextXAlignment.Left
 				
+				TextBox.Name = "TextBox"
 				TextBox.Parent = BoxContainer
 				TextBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+				TextBox.BackgroundTransparency = 0
 				TextBox.BorderSizePixel = 0
 				TextBox.Position = UDim2.new(0.7, 0, 0.22, 0)
 				TextBox.Size = UDim2.new(0.25, 0, 0, 20)
@@ -1349,13 +1406,11 @@ function Library:Window(title)
 				UICorner_textbox.CornerRadius = UDim.new(0, 4)
 				UICorner_textbox.Parent = TextBox
 				
-				TextBox.FocusLost:Connect(function(enterPressed)
-					if enterPressed then
-						callback(TextBox.Text)
-					end
+				TextBox.FocusLost:Connect(function()
+					callback(TextBox.Text)
 				end)
 				
-				updateFolderSize()
+				table.insert(folderElements, BoxContainer)
 			end
 			
 			function FolderLib:Label(text)
@@ -1364,9 +1419,9 @@ function Library:Window(title)
 				local LabelText = Instance.new("TextLabel")
 				
 				LabelContainer.Name = "LabelContainer"
-				LabelContainer.Parent = folderContent
-				LabelContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-				LabelContainer.BackgroundTransparency = 0
+				LabelContainer.Parent = FolderContent
+				LabelContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				LabelContainer.BorderSizePixel = 0
 				LabelContainer.Size = UDim2.new(0.9, 0, 0, 30)
 				
 				UICorner_label.CornerRadius = UDim.new(0, 6)
@@ -1383,7 +1438,7 @@ function Library:Window(title)
 				LabelText.TextSize = 12
 				LabelText.TextWrapped = true
 				
-				updateFolderSize()
+				table.insert(folderElements, LabelContainer)
 			end
 			
 			function FolderLib:Separator()
@@ -1391,9 +1446,9 @@ function Library:Window(title)
 				local SeparatorLine = Instance.new("Frame")
 				
 				SeparatorContainer.Name = "SeparatorContainer"
-				SeparatorContainer.Parent = folderContent
-				SeparatorContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-				SeparatorContainer.BackgroundTransparency = 0.000
+				SeparatorContainer.Parent = FolderContent
+				SeparatorContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				SeparatorContainer.BorderSizePixel = 0
 				SeparatorContainer.Size = UDim2.new(0.9, 0, 0, 10)
 				
 				SeparatorLine.Name = "SeparatorLine"
@@ -1403,60 +1458,76 @@ function Library:Window(title)
 				SeparatorLine.Position = UDim2.new(0.1, 0, 0.5, 0)
 				SeparatorLine.Size = UDim2.new(0.8, 0, 0, 1)
 				
-				updateFolderSize()
+				table.insert(folderElements, SeparatorContainer)
 			end
 			
 			function FolderLib:DestroyGui()
-				local DestroyButtonContainer = Instance.new("Frame")
-				local UICorner_destroy = Instance.new("UICorner")
-				local DestroyButton = Instance.new("TextButton")
-				local DestroyText = Instance.new("TextLabel")
-				
-				DestroyButtonContainer.Name = "DestroyButtonContainer"
-				DestroyButtonContainer.Parent = folderContent
-				DestroyButtonContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-				DestroyButtonContainer.BorderSizePixel = 0
-				DestroyButtonContainer.Size = UDim2.new(0.9, 0, 0, 36)
-				
-				UICorner_destroy.CornerRadius = UDim.new(0, 6)
-				UICorner_destroy.Parent = DestroyButtonContainer
-				
-				DestroyButton.Name = "DestroyButton"
-				DestroyButton.Parent = DestroyButtonContainer
-				DestroyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-				DestroyButton.BackgroundTransparency = 0
-				DestroyButton.Size = UDim2.new(1, 0, 1, 0)
-				DestroyButton.Font = Enum.Font.SourceSans
-				DestroyButton.Text = ""
-				DestroyButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-				DestroyButton.TextSize = 14.000
-				DestroyButton.AutoButtonColor = false
-				
+				local ButtonContainer = Instance.new("Frame")
 				local UICorner_btn = Instance.new("UICorner")
+				local Button = Instance.new("TextButton")
+				local ButtonName = Instance.new("TextLabel")
+				local ButtonHover = Instance.new("Frame")
+				
+				ButtonContainer.Name = "ButtonContainer"
+				ButtonContainer.Parent = FolderContent
+				ButtonContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				ButtonContainer.BorderSizePixel = 0
+				ButtonContainer.Size = UDim2.new(0.9, 0, 0, 36)
+				
 				UICorner_btn.CornerRadius = UDim.new(0, 6)
-				UICorner_btn.Parent = DestroyButton
+				UICorner_btn.Parent = ButtonContainer
 				
-				DestroyText.Name = "DestroyText"
-				DestroyText.Parent = DestroyButton
-				DestroyText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				DestroyText.BackgroundTransparency = 1.000
-				DestroyText.Size = UDim2.new(1, 0, 1, 0)
-				DestroyText.Font = Enum.Font.GothamMedium
-				DestroyText.Text = "Destroy UI"
-				DestroyText.TextColor3 = Color3.fromRGB(255, 80, 80)
-				DestroyText.TextSize = 14
+				ButtonHover.Name = "ButtonHover"
+				ButtonHover.Parent = ButtonContainer
+				ButtonHover.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				ButtonHover.BackgroundTransparency = 0.9
+				ButtonHover.Size = UDim2.new(1, 0, 1, 0)
+				ButtonHover.Visible = false
 				
-				DestroyButton.MouseButton1Click:Connect(function()
-					game:GetService("TweenService"):Create(DestroyButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
-					wait(0.1)
-					game:GetService("TweenService"):Create(DestroyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-					UiLib:Destroy()
+				local UICorner_hover = Instance.new("UICorner")
+				UICorner_hover.CornerRadius = UDim.new(0, 6)
+				UICorner_hover.Parent = ButtonHover
+				
+				Button.Name = "Button"
+				Button.Parent = ButtonContainer
+				Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				Button.BackgroundTransparency = 1
+				Button.Size = UDim2.new(1, 0, 1, 0)
+				Button.Font = Enum.Font.SourceSans
+				Button.Text = ""
+				Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+				Button.TextSize = 14.000
+				Button.AutoButtonColor = false
+				
+				ButtonName.Name = "ButtonName"
+				ButtonName.Parent = ButtonContainer
+				ButtonName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				ButtonName.BackgroundTransparency = 1.000
+				ButtonName.Size = UDim2.new(1, 0, 1, 0)
+				ButtonName.Font = Enum.Font.GothamMedium
+				ButtonName.Text = "Destroy UI"
+				ButtonName.TextColor3 = Color3.fromRGB(255, 100, 100)
+				ButtonName.TextSize = 14
+				
+				Button.MouseEnter:Connect(function()
+					ButtonHover.Visible = true
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 25, 25)}):Play()
 				end)
 				
-				updateFolderSize()
+				Button.MouseLeave:Connect(function()
+					ButtonHover.Visible = false
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}):Play()
+				end)
+				
+				Button.MouseButton1Click:Connect(function()
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
+					wait(0.1)
+					game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}):Play()
+					MainWindow:Destroy()
+				end)
+				
+				table.insert(folderElements, ButtonContainer)
 			end
-			
-			updateFolderSize()
 			
 			return FolderLib
 		end
@@ -1465,6 +1536,7 @@ function Library:Window(title)
 	end
 	
 	return Lib
+	
 end
 
 return Library
