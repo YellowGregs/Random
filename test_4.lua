@@ -1,1170 +1,1291 @@
-for i,v in pairs(game.CoreGui:GetChildren()) do
-	if v.Name == "UiLib" then
-		v:Destroy()
-	end
+for i, v in pairs(game:GetService("CoreGui"):GetChildren()) do
+    if v.Name == "UiLib" then
+        v:Destroy()
+    end
 end
 
-local UiLib = Instance.new("ScreenGui")
-UiLib.Name = "UiLib"
-UiLib.Parent = game.CoreGui
-UiLib.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-UiLib.ResetOnSpawn = false
+local ui_lib = Instance.new("ScreenGui")
+ui_lib.Name = "UiLib"
+ui_lib.Parent = game:GetService("CoreGui")
+ui_lib.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ui_lib.ResetOnSpawn = false
 
-local function getNextWindowPos()
-	local biggest = 0
-	local ok = nil
-	for i, v in pairs(UiLib:GetChildren()) do
-		if v.Position.X.Offset > biggest then
-			biggest = v.Position.X.Offset
-			ok = v
-		end
-	end
-	if biggest == 0 then
-		biggest = biggest + 15
-	else
-		biggest = biggest + ok.Size.X.Offset + 10
-	end
-	return biggest
+local function get_next_window_pos()
+    local biggest = 0
+    local last_window = nil
+    for _, v in pairs(ui_lib:GetChildren()) do
+        if v:IsA("Frame") and v.Position.X.Offset > biggest then
+            biggest = v.Position.X.Offset
+            last_window = v
+        end
+    end
+    if biggest == 0 then
+        biggest = biggest + 15
+    else
+        biggest = biggest + last_window.Size.X.Offset + 10
+    end
+    return biggest
 end
 
-local Library = {}
+local library = {}
 
-function Library:Window(title)
-	local Top = Instance.new("Frame")
-	local UICorner = Instance.new("UICorner")
-	local ContainerScroll = Instance.new("ScrollingFrame")
-	local UIListLayout = Instance.new("UIListLayout")
-	local Title = Instance.new("TextLabel")
-	local Minimize = Instance.new("ImageButton")
-	local Shadow = Instance.new("ImageLabel")
-	local Background = Instance.new("Frame")
-	local UICornerBG = Instance.new("UICorner")
+function library:window(title)
+    local window_frame = Instance.new("Frame")
+    local window_corner = Instance.new("UICorner")
+    local container_scroll = Instance.new("ScrollingFrame")
+    local container_layout = Instance.new("UIListLayout")
+    local window_title = Instance.new("TextLabel")
+    local close_button = Instance.new("TextButton")
+    local window_shadow = Instance.new("ImageLabel")
+    local window_background = Instance.new("Frame")
+    local background_corner = Instance.new("UICorner")
 
-	Top.Name = "Top"
-	Top.Parent = UiLib
-	Top.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	Top.BorderSizePixel = 0
-	Top.Position = UDim2.new(0, getNextWindowPos(), 0.01, 0)
-	Top.Size = UDim2.new(0, 280, 0, 40)
-	Top.Active = true
-	Top.Draggable = true
+    window_frame.Name = "WindowFrame"
+    window_frame.Parent = ui_lib
+    window_frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    window_frame.BorderSizePixel = 0
+    window_frame.Position = UDim2.new(0, get_next_window_pos(), 0.01, 0)
+    window_frame.Size = UDim2.new(0, 280, 0, 40)
+    window_frame.Active = true
+    window_frame.Draggable = true
 
-	UICorner.CornerRadius = UDim.new(0, 8)
-	UICorner.Parent = Top
+    window_corner.CornerRadius = UDim.new(0, 8)
+    window_corner.Parent = window_frame
 
-	Background.Name = "Background"
-	Background.Parent = Top
-	Background.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	Background.BorderSizePixel = 0
-	Background.Size = UDim2.new(1, 0, 1, 400)
-	Background.ZIndex = -1
-	
-	UICornerBG.CornerRadius = UDim.new(0, 8)
-	UICornerBG.Parent = Background
+    window_background.Name = "WindowBackground"
+    window_background.Parent = window_frame
+    window_background.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    window_background.BorderSizePixel = 0
+    window_background.Size = UDim2.new(1, 0, 1, 400)
+    window_background.ZIndex = -1
+    
+    background_corner.CornerRadius = UDim.new(0, 8)
+    background_corner.Parent = window_background
 
-	Shadow.Name = "Shadow"
-	Shadow.Parent = Top
-	Shadow.BackgroundTransparency = 1.000
-	Shadow.Position = UDim2.new(0, -15, 0, -15)
-	Shadow.Size = UDim2.new(1, 30, 1, 430)
-	Shadow.Image = "rbxassetid://5554236805"
-	Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-	Shadow.ImageTransparency = 0.8
-	Shadow.ScaleType = Enum.ScaleType.Slice
-	Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
-	Shadow.ZIndex = -1
+    window_shadow.Name = "WindowShadow"
+    window_shadow.Parent = window_frame
+    window_shadow.BackgroundTransparency = 1
+    window_shadow.Position = UDim2.new(0, -15, 0, -15)
+    window_shadow.Size = UDim2.new(1, 30, 1, 430)
+    window_shadow.Image = "rbxassetid://5554236805"
+    window_shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    window_shadow.ImageTransparency = 0.8
+    window_shadow.ScaleType = Enum.ScaleType.Slice
+    window_shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+    window_shadow.ZIndex = -1
 
-	ContainerScroll.Name = "ContainerScroll"
-	ContainerScroll.Parent = Top
-	ContainerScroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	ContainerScroll.BackgroundTransparency = 1
-	ContainerScroll.ClipsDescendants = true
-	ContainerScroll.Position = UDim2.new(0, 0, 1, 0)
-	ContainerScroll.Size = UDim2.new(1, 0, 0, 400)
-	ContainerScroll.ZIndex = 2
-	ContainerScroll.ScrollBarThickness = 3
-	ContainerScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
-	ContainerScroll.ScrollBarImageTransparency = 0.6
-	ContainerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    container_scroll.Name = "ContainerScroll"
+    container_scroll.Parent = window_frame
+    container_scroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    container_scroll.BackgroundTransparency = 1
+    container_scroll.ClipsDescendants = true
+    container_scroll.Position = UDim2.new(0, 0, 1, 0)
+    container_scroll.Size = UDim2.new(1, 0, 0, 400)
+    container_scroll.ZIndex = 2
+    container_scroll.ScrollBarThickness = 3
+    container_scroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+    container_scroll.ScrollBarImageTransparency = 0.6
+    container_scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-	UIListLayout.Parent = ContainerScroll
-	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	UIListLayout.Padding = UDim.new(0, 8)
-	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    container_layout.Parent = container_scroll
+    container_layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    container_layout.SortOrder = Enum.SortOrder.LayoutOrder
+    container_layout.Padding = UDim.new(0, 8)
+    container_layout.VerticalAlignment = Enum.VerticalAlignment.Top
 
-	Title.Name = "Title"
-	Title.Parent = Top
-	Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Title.BackgroundTransparency = 1.000
-	Title.Position = UDim2.new(0.05, 0, 0, 0)
-	Title.Size = UDim2.new(0.7, 0, 1, 0)
-	Title.Font = Enum.Font.GothamSemibold
-	Title.Text = title
-	Title.TextColor3 = Color3.fromRGB(240, 240, 240)
-	Title.TextSize = 15
-	Title.TextWrapped = true
-	Title.TextXAlignment = Enum.TextXAlignment.Left
+    window_title.Name = "WindowTitle"
+    window_title.Parent = window_frame
+    window_title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    window_title.BackgroundTransparency = 1
+    window_title.Position = UDim2.new(0.05, 0, 0, 0)
+    window_title.Size = UDim2.new(0.7, 0, 1, 0)
+    window_title.Font = Enum.Font.GothamSemibold
+    window_title.Text = title
+    window_title.TextColor3 = Color3.fromRGB(240, 240, 240)
+    window_title.TextSize = 15
+    window_title.TextWrapped = true
+    window_title.TextXAlignment = Enum.TextXAlignment.Left
 
-	Minimize.Name = "Minimize"
-	Minimize.Parent = Top
-	Minimize.BackgroundTransparency = 1.000
-	Minimize.Position = UDim2.new(0.85, 0, 0.2, 0)
-	Minimize.Rotation = 90
-	Minimize.Size = UDim2.new(0, 24, 0, 24)
-	Minimize.ZIndex = 2
-	Minimize.Image = "rbxassetid://4726772334"
-	Minimize.ImageColor3 = Color3.fromRGB(200, 200, 200)
+    close_button.Name = "CloseButton"
+    close_button.Parent = window_frame
+    close_button.BackgroundTransparency = 1
+    close_button.Position = UDim2.new(0.85, 0, 0.15, 0)
+    close_button.Size = UDim2.new(0, 24, 0, 24)
+    close_button.ZIndex = 2
+    close_button.Font = Enum.Font.GothamSemibold
+    close_button.Text = "X"
+    close_button.TextColor3 = Color3.fromRGB(200, 200, 200)
+    close_button.TextSize = 18
+    close_button.AutoButtonColor = false
 
-	local function UZVNGAL_fake_script()
-		local script = Instance.new('Script', Minimize)
+    local function update_close_button_text(is_closed)
+        if is_closed then
+            close_button.Text = "-"
+            close_button.Rotation = 0
+        else
+            close_button.Text = "X"
+            close_button.Rotation = 0
+        end
+    end
 
-		script.Parent.MouseButton1Click:Connect(function()
-			if script.Parent.Parent.ContainerScroll.Size == UDim2.new(1, 0, 0, 400) then 
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 270}):Play()
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
-				script.Parent.Parent.ContainerScroll:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Quad", 0.25, true)
-				game:GetService("TweenService"):Create(Background, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-				game:GetService("TweenService"):Create(Shadow, TweenInfo.new(0.25), {Size = UDim2.new(1, 30, 1, 30)}):Play()
-			else
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 90}):Play()
-				game:GetService("TweenService"):Create(script.Parent, TweenInfo.new(0.25), {ImageColor3 = Color3.fromRGB(200, 200, 200)}):Play()
-				script.Parent.Parent.ContainerScroll:TweenSize(UDim2.new(1, 0, 0, 400), "Out", "Quad", 0.25, true)
-				game:GetService("TweenService"):Create(Background, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 1, 400)}):Play()
-				game:GetService("TweenService"):Create(Shadow, TweenInfo.new(0.25), {Size = UDim2.new(1, 30, 1, 430)}):Play()
-			end
-		end)
-	end
-	coroutine.wrap(UZVNGAL_fake_script)()
-	
-	UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		ContainerScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-	end)
-	
-	local Lib = {}
-	
-	function Lib:Button(name, callback)
-		local ButtonContainer = Instance.new("Frame")
-		local UICorner_btn = Instance.new("UICorner")
-		local Button = Instance.new("TextButton")
-		local ButtonName = Instance.new("TextLabel")
-		
-		ButtonContainer.Name = "ButtonContainer"
-		ButtonContainer.Parent = ContainerScroll
-		ButtonContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		ButtonContainer.BorderSizePixel = 0
-		ButtonContainer.Size = UDim2.new(0.9, 0, 0, 36)
-		
-		UICorner_btn.CornerRadius = UDim.new(0, 6)
-		UICorner_btn.Parent = ButtonContainer
-		
-		Button.Name = "Button"
-		Button.Parent = ButtonContainer
-		Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		Button.BackgroundTransparency = 1
-		Button.Size = UDim2.new(1, 0, 1, 0)
-		Button.Font = Enum.Font.SourceSans
-		Button.Text = ""
-		Button.TextColor3 = Color3.fromRGB(0, 0, 0)
-		Button.TextSize = 14.000
-		Button.AutoButtonColor = false
-		
-		ButtonName.Name = "ButtonName"
-		ButtonName.Parent = ButtonContainer
-		ButtonName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		ButtonName.BackgroundTransparency = 1.000
-		ButtonName.Size = UDim2.new(1, 0, 1, 0)
-		ButtonName.Font = Enum.Font.Gotham
-		ButtonName.Text = name
-		ButtonName.TextColor3 = Color3.fromRGB(220, 220, 220)
-		ButtonName.TextSize = 13
-		
-		Button.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-		end)
-		
-		Button.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-		end)
-		
-		Button.MouseButton1Click:Connect(function()
-			game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-			wait(0.1)
-			game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-			callback()
-		end)
-		
-		Button.TouchTap:Connect(function()
-			game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-			wait(0.1)
-			game:GetService("TweenService"):Create(ButtonContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-			callback()
-		end)
-	end
-	
-	function Lib:Toggle(name, callback)
-		local ToggleContainer = Instance.new("Frame")
-		local UICorner_toggle = Instance.new("UICorner")
-		local ToggleName = Instance.new("TextLabel")
-		local Toggle = Instance.new("TextButton")
-		local UICorner_3 = Instance.new("UICorner")
-		local ToggleIndicator = Instance.new("Frame")
-		local UICorner_indicator = Instance.new("UICorner")
-		
-		ToggleContainer.Name = "ToggleContainer"
-		ToggleContainer.Parent = ContainerScroll
-		ToggleContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		ToggleContainer.BorderSizePixel = 0
-		ToggleContainer.Size = UDim2.new(0.9, 0, 0, 36)
-		
-		UICorner_toggle.CornerRadius = UDim.new(0, 6)
-		UICorner_toggle.Parent = ToggleContainer
-		
-		ToggleName.Name = "ToggleName"
-		ToggleName.Parent = ToggleContainer
-		ToggleName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		ToggleName.BackgroundTransparency = 1.000
-		ToggleName.Position = UDim2.new(0.05, 0, 0, 0)
-		ToggleName.Size = UDim2.new(0.65, 0, 1, 0)
-		ToggleName.Font = Enum.Font.Gotham
-		ToggleName.Text = name
-		ToggleName.TextColor3 = Color3.fromRGB(220, 220, 220)
-		ToggleName.TextSize = 13
-		ToggleName.TextXAlignment = Enum.TextXAlignment.Left
-		
-		Toggle.Name = "Toggle"
-		Toggle.Parent = ToggleContainer
-		Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		Toggle.BorderColor3 = Color3.fromRGB(27, 42, 53)
-		Toggle.Position = UDim2.new(0.78, 0, 0.22, 0)
-		Toggle.Size = UDim2.new(0, 40, 0, 20)
-		Toggle.AutoButtonColor = false
-		Toggle.Font = Enum.Font.SourceSans
-		Toggle.Text = ""
-		Toggle.TextColor3 = Color3.fromRGB(0, 0, 0)
-		Toggle.TextSize = 14.000
-		
-		UICorner_3.CornerRadius = UDim.new(1, 0)
-		UICorner_3.Parent = Toggle
-		
-		ToggleIndicator.Name = "ToggleIndicator"
-		ToggleIndicator.Parent = Toggle
-		ToggleIndicator.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-		ToggleIndicator.BorderSizePixel = 0
-		ToggleIndicator.Position = UDim2.new(0.05, 0, 0.1, 0)
-		ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
-		
-		UICorner_indicator.CornerRadius = UDim.new(1, 0)
-		UICorner_indicator.Parent = ToggleIndicator
-		
-		local Toggled = false
-		
-		local function toggleState()
-			Toggled = not Toggled
-			if Toggled then
-				game:GetService("TweenService"):Create(ToggleIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0.55, 0, 0.1, 0), BackgroundColor3 = Color3.fromRGB(0, 180, 255)}):Play()
-				game:GetService("TweenService"):Create(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(0, 100, 150)}):Play()
-			else
-				game:GetService("TweenService"):Create(ToggleIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0.05, 0, 0.1, 0), BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
-				game:GetService("TweenService"):Create(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-			end
-			callback(Toggled)
-		end
-		
-		Toggle.MouseButton1Click:Connect(toggleState)
-		Toggle.TouchTap:Connect(toggleState)
-		
-		ToggleContainer.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(ToggleContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-		end)
-		
-		ToggleContainer.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(ToggleContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-		end)
-	end
-	
-	function Lib:Slider(name, min, max, default, callback)
-		local SliderContainer = Instance.new("Frame")
-		local UICorner_slider = Instance.new("UICorner")
-		local SliderName = Instance.new("TextLabel")
-		local SliderValue = Instance.new("TextLabel")
-		local SliderTrack = Instance.new("Frame")
-		local UICorner_track = Instance.new("UICorner")
-		local SliderFill = Instance.new("Frame")
-		local UICorner_fill = Instance.new("UICorner")
-		local SliderButton = Instance.new("TextButton")
-		
-		SliderContainer.Name = "SliderContainer"
-		SliderContainer.Parent = ContainerScroll
-		SliderContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		SliderContainer.BorderSizePixel = 0
-		SliderContainer.Size = UDim2.new(0.9, 0, 0, 48)
-		
-		UICorner_slider.CornerRadius = UDim.new(0, 6)
-		UICorner_slider.Parent = SliderContainer
-		
-		SliderName.Name = "SliderName"
-		SliderName.Parent = SliderContainer
-		SliderName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		SliderName.BackgroundTransparency = 1.000
-		SliderName.Position = UDim2.new(0.05, 0, 0, 0)
-		SliderName.Size = UDim2.new(0.6, 0, 0, 20)
-		SliderName.Font = Enum.Font.Gotham
-		SliderName.Text = name
-		SliderName.TextColor3 = Color3.fromRGB(220, 220, 220)
-		SliderName.TextSize = 13
-		SliderName.TextXAlignment = Enum.TextXAlignment.Left
-		
-		SliderValue.Name = "SliderValue"
-		SliderValue.Parent = SliderContainer
-		SliderValue.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		SliderValue.BackgroundTransparency = 1.000
-		SliderValue.Position = UDim2.new(0.7, 0, 0, 0)
-		SliderValue.Size = UDim2.new(0.25, 0, 0, 20)
-		SliderValue.Font = Enum.Font.Gotham
-		SliderValue.Text = tostring(default)
-		SliderValue.TextColor3 = Color3.fromRGB(180, 180, 180)
-		SliderValue.TextSize = 13
-		SliderValue.TextXAlignment = Enum.TextXAlignment.Right
-		
-		SliderTrack.Name = "SliderTrack"
-		SliderTrack.Parent = SliderContainer
-		SliderTrack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		SliderTrack.BorderSizePixel = 0
-		SliderTrack.Position = UDim2.new(0.05, 0, 0.6, 0)
-		SliderTrack.Size = UDim2.new(0.9, 0, 0, 4)
-		
-		UICorner_track.CornerRadius = UDim.new(1, 0)
-		UICorner_track.Parent = SliderTrack
-		
-		SliderFill.Name = "SliderFill"
-		SliderFill.Parent = SliderTrack
-		SliderFill.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
-		SliderFill.BorderSizePixel = 0
-		SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-		
-		UICorner_fill.CornerRadius = UDim.new(1, 0)
-		UICorner_fill.Parent = SliderFill
-		
-		SliderButton.Name = "SliderButton"
-		SliderButton.Parent = SliderTrack
-		SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		SliderButton.BorderSizePixel = 0
-		SliderButton.Position = UDim2.new((default - min) / (max - min), -8, 0, -6)
-		SliderButton.Size = UDim2.new(0, 16, 0, 16)
-		SliderButton.Font = Enum.Font.SourceSans
-		SliderButton.Text = ""
-		SliderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-		SliderButton.TextSize = 14.000
-		SliderButton.AutoButtonColor = false
-		
-		local UICorner_button = Instance.new("UICorner")
-		UICorner_button.CornerRadius = UDim.new(1, 0)
-		UICorner_button.Parent = SliderButton
-		
-		local dragging = false
-		local currentValue = default
-		
-		local function updateSlider(input)
-			local pos = UDim2.new(
-				math.clamp((input.Position.X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X, 0, 1),
-				0,
-				0, 0
-			)
-			local value = math.floor(min + (pos.X.Scale * (max - min)))
-			
-			SliderFill.Size = UDim2.new(pos.X.Scale, 0, 1, 0)
-			SliderButton.Position = UDim2.new(pos.X.Scale, -8, 0, -6)
-			SliderValue.Text = tostring(value)
-			
-			if value ~= currentValue then
-				currentValue = value
-				callback(value)
-			end
-		end
-		
-		local function startDragging(input)
-			dragging = true
-			game:GetService("TweenService"):Create(SliderButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 20, 0, 20)}):Play()
-		end
-		
-		local function stopDragging()
-			dragging = false
-			game:GetService("TweenService"):Create(SliderButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 16, 0, 16)}):Play()
-		end
-		
-		SliderButton.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				startDragging(input)
-			end
-		end)
-		
-		SliderButton.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				stopDragging()
-			end
-		end)
-		
-		game:GetService("UserInputService").InputChanged:Connect(function(input)
-			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-				updateSlider(input)
-			end
-		end)
-		
-		SliderTrack.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				updateSlider(input)
-				startDragging(input)
-			end
-		end)
-		
-		SliderTrack.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				stopDragging()
-			end
-		end)
-		
-		SliderContainer.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(SliderContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-		end)
-		
-		SliderContainer.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(SliderContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-		end)
-	end
-	
-	function Lib:Dropdown(name, options, callback)
-		local DropdownContainer = Instance.new("Frame")
-		local UICorner_dropdown = Instance.new("UICorner")
-		local DropdownName = Instance.new("TextLabel")
-		local DropdownButton = Instance.new("TextButton")
-		local DropdownArrow = Instance.new("ImageLabel")
-		local DropdownSelected = Instance.new("TextLabel")
-		
-		DropdownContainer.Name = "DropdownContainer"
-		DropdownContainer.Parent = ContainerScroll
-		DropdownContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		DropdownContainer.BorderSizePixel = 0
-		DropdownContainer.Size = UDim2.new(0.9, 0, 0, 36)
-		DropdownContainer.ClipsDescendants = false
-		
-		UICorner_dropdown.CornerRadius = UDim.new(0, 6)
-		UICorner_dropdown.Parent = DropdownContainer
-		
-		DropdownName.Name = "DropdownName"
-		DropdownName.Parent = DropdownContainer
-		DropdownName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		DropdownName.BackgroundTransparency = 1.000
-		DropdownName.Position = UDim2.new(0.05, 0, 0, 0)
-		DropdownName.Size = UDim2.new(0.65, 0, 1, 0)
-		DropdownName.Font = Enum.Font.Gotham
-		DropdownName.Text = name
-		DropdownName.TextColor3 = Color3.fromRGB(220, 220, 220)
-		DropdownName.TextSize = 13
-		DropdownName.TextXAlignment = Enum.TextXAlignment.Left
-		
-		DropdownButton.Name = "DropdownButton"
-		DropdownButton.Parent = DropdownContainer
-		DropdownButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		DropdownButton.BackgroundTransparency = 0
-		DropdownButton.Position = UDim2.new(0.7, 0, 0.22, 0)
-		DropdownButton.Size = UDim2.new(0.25, 0, 0, 20)
-		DropdownButton.Font = Enum.Font.SourceSans
-		DropdownButton.Text = ""
-		DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		DropdownButton.TextSize = 12.000
-		DropdownButton.AutoButtonColor = false
-		
-		local UICorner_btn = Instance.new("UICorner")
-		UICorner_btn.CornerRadius = UDim.new(0, 4)
-		UICorner_btn.Parent = DropdownButton
-		
-		DropdownSelected.Name = "DropdownSelected"
-		DropdownSelected.Parent = DropdownButton
-		DropdownSelected.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		DropdownSelected.BackgroundTransparency = 1.000
-		DropdownSelected.Position = UDim2.new(0.05, 0, 0, 0)
-		DropdownSelected.Size = UDim2.new(0.7, 0, 1, 0)
-		DropdownSelected.Font = Enum.Font.Gotham
-		DropdownSelected.Text = "Select"
-		DropdownSelected.TextColor3 = Color3.fromRGB(200, 200, 200)
-		DropdownSelected.TextSize = 11
-		DropdownSelected.TextXAlignment = Enum.TextXAlignment.Left
-		
-		DropdownArrow.Name = "DropdownArrow"
-		DropdownArrow.Parent = DropdownButton
-		DropdownArrow.BackgroundTransparency = 1
-		DropdownArrow.Position = UDim2.new(0.8, 0, 0.15, 0)
-		DropdownArrow.Size = UDim2.new(0, 12, 0, 12)
-		DropdownArrow.Image = "rbxassetid://153287088"
-		DropdownArrow.ImageColor3 = Color3.fromRGB(200, 200, 200)
-		DropdownArrow.Rotation = 90
-		
-		local DropdownList = Instance.new("Frame")
-		local DropdownScroll = Instance.new("ScrollingFrame")
-		local UIListLayout_list = Instance.new("UIListLayout")
-		
-		DropdownList.Name = "DropdownList"
-		DropdownList.Parent = UiLib
-		DropdownList.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-		DropdownList.BorderSizePixel = 0
-		DropdownList.Size = UDim2.new(0, DropdownButton.AbsoluteSize.X, 0, 0)
-		DropdownList.Visible = false
-		DropdownList.ZIndex = 20
-		DropdownList.ClipsDescendants = true
-		
-		local DropdownShadow = Instance.new("ImageLabel")
-		DropdownShadow.Name = "DropdownShadow"
-		DropdownShadow.Parent = DropdownList
-		DropdownShadow.BackgroundTransparency = 1
-		DropdownShadow.Size = UDim2.new(1, 15, 1, 15)
-		DropdownShadow.Position = UDim2.new(0, -8, 0, -8)
-		DropdownShadow.Image = "rbxassetid://5554236805"
-		DropdownShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-		DropdownShadow.ImageTransparency = 0.8
-		DropdownShadow.ScaleType = Enum.ScaleType.Slice
-		DropdownShadow.SliceCenter = Rect.new(23, 23, 277, 277)
-		DropdownShadow.ZIndex = 19
-		
-		local UICorner_list = Instance.new("UICorner")
-		UICorner_list.CornerRadius = UDim.new(0, 6)
-		UICorner_list.Parent = DropdownList
-		
-		DropdownScroll.Name = "DropdownScroll"
-		DropdownScroll.Parent = DropdownList
-		DropdownScroll.Active = true
-		DropdownScroll.BackgroundTransparency = 1
-		DropdownScroll.BorderSizePixel = 0
-		DropdownScroll.Size = UDim2.new(1, -6, 1, -6)
-		DropdownScroll.Position = UDim2.new(0, 3, 0, 3)
-		DropdownScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-		DropdownScroll.ScrollBarThickness = 3
-		DropdownScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
-		DropdownScroll.ScrollBarImageTransparency = 0.3
-		DropdownScroll.VerticalScrollBarInset = Enum.ScrollBarInset.Always
-		DropdownScroll.ZIndex = 21
-		
-		UIListLayout_list.Parent = DropdownScroll
-		UIListLayout_list.SortOrder = Enum.SortOrder.LayoutOrder
-		UIListLayout_list.Padding = UDim.new(0, 3)
-		
-		local isOpen = false
-		local selectedOption = nil
-		
-		local function updateListHeight()
-			local itemCount = #options
-			local height = math.min(itemCount * 28 + 6, 140)
-			DropdownScroll.CanvasSize = UDim2.new(0, 0, 0, itemCount * 28)
-			return height
-		end
-		
-		local function toggleDropdown()
-			isOpen = not isOpen
-			if isOpen then
-				DropdownList.Visible = true
-				DropdownList.Position = UDim2.new(
-					0, DropdownButton.AbsolutePosition.X,
-					0, DropdownButton.AbsolutePosition.Y + DropdownButton.AbsoluteSize.Y + 4
-				)
-				DropdownList.Size = UDim2.new(0, DropdownButton.AbsoluteSize.X, 0, 0)
-				game:GetService("TweenService"):Create(DropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Rotation = 270}):Play()
-				game:GetService("TweenService"):Create(DropdownButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
-				DropdownList:TweenSize(
-					UDim2.new(0, DropdownButton.AbsoluteSize.X, 0, updateListHeight()),
-					"Out", "Quad", 0.2, true
-				)
-			else
-				game:GetService("TweenService"):Create(DropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Rotation = 90}):Play()
-				game:GetService("TweenService"):Create(DropdownButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-				DropdownList:TweenSize(
-					UDim2.new(0, DropdownButton.AbsoluteSize.X, 0, 0),
-					"Out", "Quad", 0.2, true,
-					function()
-						DropdownList.Visible = false
-					end
-				)
-			end
-		end
-		
-		DropdownButton.MouseButton1Click:Connect(toggleDropdown)
-		DropdownButton.TouchTap:Connect(toggleDropdown)
-		
-		for i, option in ipairs(options) do
-			local OptionButton = Instance.new("TextButton")
-			local OptionText = Instance.new("TextLabel")
-			
-			OptionButton.Name = "Option_" .. option
-			OptionButton.Parent = DropdownScroll
-			OptionButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-			OptionButton.BorderSizePixel = 0
-			OptionButton.Size = UDim2.new(1, 0, 0, 26)
-			OptionButton.Font = Enum.Font.SourceSans
-			OptionButton.Text = ""
-			OptionButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-			OptionButton.TextSize = 14
-			OptionButton.AutoButtonColor = false
-			OptionButton.ZIndex = 22
-			
-			local UICorner_option = Instance.new("UICorner")
-			UICorner_option.CornerRadius = UDim.new(0, 4)
-			UICorner_option.Parent = OptionButton
-			
-			OptionText.Name = "OptionText"
-			OptionText.Parent = OptionButton
-			OptionText.BackgroundTransparency = 1
-			OptionText.Size = UDim2.new(1, -8, 1, 0)
-			OptionText.Position = UDim2.new(0, 4, 0, 0)
-			OptionText.Font = Enum.Font.Gotham
-			OptionText.Text = option
-			OptionText.TextColor3 = Color3.fromRGB(220, 220, 220)
-			OptionText.TextSize = 11
-			OptionText.TextXAlignment = Enum.TextXAlignment.Left
-			OptionText.ZIndex = 24
-			
-			OptionButton.MouseButton1Click:Connect(function()
-				selectedOption = option
-				DropdownSelected.Text = option
-				toggleDropdown()
-				callback(option)
-			end)
-			
-			OptionButton.TouchTap:Connect(function()
-				selectedOption = option
-				DropdownSelected.Text = option
-				toggleDropdown()
-				callback(option)
-			end)
-			
-			OptionButton.MouseEnter:Connect(function()
-				game:GetService("TweenService"):Create(OptionButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
-			end)
-			
-			OptionButton.MouseLeave:Connect(function()
-				game:GetService("TweenService"):Create(OptionButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-			end)
-		end
-		
-		updateListHeight()
-		
-		local connection
-		connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and isOpen then
-				local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-				local dropdownPos = DropdownList.AbsolutePosition
-				local dropdownSize = DropdownList.AbsoluteSize
-				
-				if not (mousePos.X >= dropdownPos.X and mousePos.X <= dropdownPos.X + dropdownSize.X and
-					   mousePos.Y >= dropdownPos.Y and mousePos.Y <= dropdownPos.Y + dropdownSize.Y) then
-					if isOpen then
-						toggleDropdown()
-					end
-				end
-			end
-		end)
-		
-		Top.Destroying:Connect(function()
-			if connection then
-				connection:Disconnect()
-			end
-		end)
-		
-		DropdownContainer.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(DropdownContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-		end)
-		
-		DropdownContainer.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(DropdownContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-		end)
-	end
-	
-	function Lib:Colorpicker(name, defaultColor, callback)
-		local ColorpickerContainer = Instance.new("Frame")
-		local UICorner_color = Instance.new("UICorner")
-		local ColorpickerName = Instance.new("TextLabel")
-		local ColorButton = Instance.new("TextButton")
-		local ColorPreview = Instance.new("Frame")
-		local UICorner_preview = Instance.new("UICorner")
-		
-		ColorpickerContainer.Name = "ColorpickerContainer"
-		ColorpickerContainer.Parent = ContainerScroll
-		ColorpickerContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		ColorpickerContainer.BorderSizePixel = 0
-		ColorpickerContainer.Size = UDim2.new(0.9, 0, 0, 36)
-		
-		UICorner_color.CornerRadius = UDim.new(0, 6)
-		UICorner_color.Parent = ColorpickerContainer
-		
-		ColorpickerName.Name = "ColorpickerName"
-		ColorpickerName.Parent = ColorpickerContainer
-		ColorpickerName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		ColorpickerName.BackgroundTransparency = 1.000
-		ColorpickerName.Position = UDim2.new(0.05, 0, 0, 0)
-		ColorpickerName.Size = UDim2.new(0.65, 0, 1, 0)
-		ColorpickerName.Font = Enum.Font.Gotham
-		ColorpickerName.Text = name
-		ColorpickerName.TextColor3 = Color3.fromRGB(220, 220, 220)
-		ColorpickerName.TextSize = 13
-		ColorpickerName.TextXAlignment = Enum.TextXAlignment.Left
-		
-		ColorButton.Name = "ColorButton"
-		ColorButton.Parent = ColorpickerContainer
-		ColorButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		ColorButton.BackgroundTransparency = 0
-		ColorButton.Position = UDim2.new(0.7, 0, 0.22, 0)
-		ColorButton.Size = UDim2.new(0.25, 0, 0, 20)
-		ColorButton.Font = Enum.Font.SourceSans
-		ColorButton.Text = ""
-		ColorButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-		ColorButton.TextSize = 14.000
-		ColorButton.AutoButtonColor = false
-		
-		local UICorner_btn = Instance.new("UICorner")
-		UICorner_btn.CornerRadius = UDim.new(0, 4)
-		UICorner_btn.Parent = ColorButton
-		
-		ColorPreview.Name = "ColorPreview"
-		ColorPreview.Parent = ColorButton
-		ColorPreview.BackgroundColor3 = defaultColor or Color3.fromRGB(0, 180, 255)
-		ColorPreview.BorderSizePixel = 0
-		ColorPreview.Position = UDim2.new(0.1, 0, 0.1, 0)
-		ColorPreview.Size = UDim2.new(0.8, 0, 0, 16)
-		
-		UICorner_preview.CornerRadius = UDim.new(0, 3)
-		UICorner_preview.Parent = ColorPreview
-		
-		local colorPickerFrame = nil
-		
-		local function showColorPicker()
-			if colorPickerFrame then
-				colorPickerFrame:Destroy()
-				colorPickerFrame = nil
-				return
-			end
-			
-			colorPickerFrame = Instance.new("Frame")
-			local UICorner_frame = Instance.new("UICorner")
-			local ColorDisplay = Instance.new("Frame")
-			local UICorner_display = Instance.new("UICorner")
-			local RContainer = Instance.new("Frame")
-			local RName = Instance.new("TextLabel")
-			local RTrack = Instance.new("Frame")
-			local RFill = Instance.new("Frame")
-			local RButton = Instance.new("TextButton")
-			local RValue = Instance.new("TextLabel")
-			local GContainer = Instance.new("Frame")
-			local GName = Instance.new("TextLabel")
-			local GTrack = Instance.new("Frame")
-			local GFill = Instance.new("Frame")
-			local GButton = Instance.new("TextButton")
-			local GValue = Instance.new("TextLabel")
-			local BContainer = Instance.new("Frame")
-			local BName = Instance.new("TextLabel")
-			local BTrack = Instance.new("Frame")
-			local BFill = Instance.new("Frame")
-			local BButton = Instance.new("TextButton")
-			local BValue = Instance.new("TextLabel")
-			local ApplyButton = Instance.new("TextButton")
-			
-			local currentColor = ColorPreview.BackgroundColor3
-			local r, g, b = math.floor(currentColor.r * 255), math.floor(currentColor.g * 255), math.floor(currentColor.b * 255)
-			
-			colorPickerFrame.Name = "ColorPickerFrame"
-			colorPickerFrame.Parent = UiLib
-			colorPickerFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-			colorPickerFrame.BorderSizePixel = 0
-			colorPickerFrame.Position = UDim2.new(0, 0, 0, 0)
-			colorPickerFrame.Size = UDim2.new(0, 200, 0, 0)
-			colorPickerFrame.ZIndex = 30
-			colorPickerFrame.ClipsDescendants = true
-			
-			UICorner_frame.CornerRadius = UDim.new(0, 8)
-			UICorner_frame.Parent = colorPickerFrame
-			
-			local colorPickerShadow = Instance.new("ImageLabel")
-			colorPickerShadow.Name = "ColorPickerShadow"
-			colorPickerShadow.Parent = colorPickerFrame
-			colorPickerShadow.BackgroundTransparency = 1
-			colorPickerShadow.Size = UDim2.new(1, 20, 1, 20)
-			colorPickerShadow.Position = UDim2.new(0, -10, 0, -10)
-			colorPickerShadow.Image = "rbxassetid://5554236805"
-			colorPickerShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-			colorPickerShadow.ImageTransparency = 0.8
-			colorPickerShadow.ScaleType = Enum.ScaleType.Slice
-			colorPickerShadow.SliceCenter = Rect.new(23, 23, 277, 277)
-			colorPickerShadow.ZIndex = 29
-			
-			ColorDisplay.Name = "ColorDisplay"
-			ColorDisplay.Parent = colorPickerFrame
-			ColorDisplay.BackgroundColor3 = currentColor
-			ColorDisplay.BorderSizePixel = 0
-			ColorDisplay.Position = UDim2.new(0.05, 0, 0.05, 0)
-			ColorDisplay.Size = UDim2.new(0.9, 0, 0, 40)
-			
-			UICorner_display.CornerRadius = UDim.new(0, 6)
-			UICorner_display.Parent = ColorDisplay
-			
-			local function createRGBSlider(name, yPos, value, color)
-				local container = Instance.new("Frame")
-				local nameLabel = Instance.new("TextLabel")
-				local track = Instance.new("Frame")
-				local fill = Instance.new("Frame")
-				local button = Instance.new("TextButton")
-				local valueLabel = Instance.new("TextLabel")
-				
-				container.Name = name .. "Container"
-				container.Parent = colorPickerFrame
-				container.BackgroundTransparency = 1
-				container.Position = UDim2.new(0.05, 0, yPos, 0)
-				container.Size = UDim2.new(0.9, 0, 0, 30)
-				
-				nameLabel.Name = name .. "Name"
-				nameLabel.Parent = container
-				nameLabel.BackgroundTransparency = 1
-				nameLabel.Position = UDim2.new(0, 0, 0, 0)
-				nameLabel.Size = UDim2.new(0.2, 0, 1, 0)
-				nameLabel.Font = Enum.Font.Gotham
-				nameLabel.Text = name
-				nameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-				nameLabel.TextSize = 12
-				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-				
-				track.Name = name .. "Track"
-				track.Parent = container
-				track.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-				track.BorderSizePixel = 0
-				track.Position = UDim2.new(0.25, 0, 0.5, 0)
-				track.Size = UDim2.new(0.5, 0, 0, 4)
-				
-				local trackCorner = Instance.new("UICorner")
-				trackCorner.CornerRadius = UDim.new(1, 0)
-				trackCorner.Parent = track
-				
-				fill.Name = name .. "Fill"
-				fill.Parent = track
-				fill.BackgroundColor3 = color
-				fill.BorderSizePixel = 0
-				fill.Size = UDim2.new(value / 255, 0, 1, 0)
-				
-				local fillCorner = Instance.new("UICorner")
-				fillCorner.CornerRadius = UDim.new(1, 0)
-				fillCorner.Parent = fill
-				
-				button.Name = name .. "Button"
-				button.Parent = track
-				button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				button.BorderSizePixel = 0
-				button.Position = UDim2.new(value / 255, -6, 0, -5)
-				button.Size = UDim2.new(0, 14, 0, 14)
-				button.Font = Enum.Font.SourceSans
-				button.Text = ""
-				button.TextColor3 = Color3.fromRGB(0, 0, 0)
-				button.TextSize = 14
-				button.AutoButtonColor = false
-				
-				local buttonCorner = Instance.new("UICorner")
-				buttonCorner.CornerRadius = UDim.new(1, 0)
-				buttonCorner.Parent = button
-				
-				valueLabel.Name = name .. "Value"
-				valueLabel.Parent = container
-				valueLabel.BackgroundTransparency = 1
-				valueLabel.Position = UDim2.new(0.8, 0, 0, 0)
-				valueLabel.Size = UDim2.new(0.2, 0, 1, 0)
-				valueLabel.Font = Enum.Font.Gotham
-				valueLabel.Text = tostring(value)
-				valueLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-				valueLabel.TextSize = 12
-				valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-				
-				return {container = container, track = track, fill = fill, button = button, value = valueLabel}
-			end
-			
-			local rData = createRGBSlider("R", 0.25, r, Color3.fromRGB(255, 50, 50))
-			local gData = createRGBSlider("G", 0.4, g, Color3.fromRGB(50, 255, 50))
-			local bData = createRGBSlider("B", 0.55, b, Color3.fromRGB(50, 50, 255))
-			
-			ApplyButton.Name = "ApplyButton"
-			ApplyButton.Parent = colorPickerFrame
-			ApplyButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
-			ApplyButton.BorderSizePixel = 0
-			ApplyButton.Position = UDim2.new(0.05, 0, 0.75, 0)
-			ApplyButton.Size = UDim2.new(0.9, 0, 0, 30)
-			ApplyButton.Font = Enum.Font.GothamSemibold
-			ApplyButton.Text = "Apply"
-			ApplyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			ApplyButton.TextSize = 13
-			ApplyButton.AutoButtonColor = false
-			
-			local applyCorner = Instance.new("UICorner")
-			applyCorner.CornerRadius = UDim.new(0, 6)
-			applyCorner.Parent = ApplyButton
-			
-			local function updateColor()
-				currentColor = Color3.fromRGB(r, g, b)
-				ColorDisplay.BackgroundColor3 = currentColor
-			end
-			
-			local function createSliderLogic(data, color, isR, isG, isB)
-				local dragging = false
-				
-				local function updateSlider(input)
-					local pos = UDim2.new(
-						math.clamp((input.Position.X - data.track.AbsolutePosition.X) / data.track.AbsoluteSize.X, 0, 1),
-						0,
-						0, 0
-					)
-					local value = math.floor(pos.X.Scale * 255)
-					
-					data.fill.Size = UDim2.new(pos.X.Scale, 0, 1, 0)
-					data.button.Position = UDim2.new(pos.X.Scale, -6, 0, -5)
-					data.value.Text = tostring(value)
-					
-					if isR then r = value
-					elseif isG then g = value
-					elseif isB then b = value end
-					
-					updateColor()
-				end
-				
-				local function startDragging(input)
-					dragging = true
-					game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 18)}):Play()
-				end
-				
-				local function stopDragging()
-					dragging = false
-					game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 14, 0, 14)}):Play()
-				end
-				
-				data.button.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						startDragging(input)
-					end
-				end)
-				
-				data.button.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						stopDragging()
-					end
-				end)
-				
-				data.track.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						updateSlider(input)
-						startDragging(input)
-					end
-				end)
-				
-				data.track.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						stopDragging()
-					end
-				end)
-				
-				game:GetService("UserInputService").InputChanged:Connect(function(input)
-					if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-						updateSlider(input)
-					end
-				end)
-			end
-			
-			createSliderLogic(rData, Color3.fromRGB(255, 50, 50), true, false, false)
-			createSliderLogic(gData, Color3.fromRGB(50, 255, 50), false, true, false)
-			createSliderLogic(bData, Color3.fromRGB(50, 50, 255), false, false, true)
-			
-			ApplyButton.MouseButton1Click:Connect(function()
-				callback(currentColor)
-				ColorPreview.BackgroundColor3 = currentColor
-				colorPickerFrame:TweenSize(UDim2.new(0, 200, 0, 0), "Out", "Quad", 0.2, true, function()
-					colorPickerFrame:Destroy()
-					colorPickerFrame = nil
-				end)
-			end)
-			
-			ApplyButton.TouchTap:Connect(function()
-				callback(currentColor)
-				ColorPreview.BackgroundColor3 = currentColor
-				colorPickerFrame:TweenSize(UDim2.new(0, 200, 0, 0), "Out", "Quad", 0.2, true, function()
-					colorPickerFrame:Destroy()
-					colorPickerFrame = nil
-				end)
-			end)
-			
-			ApplyButton.MouseEnter:Connect(function()
-				game:GetService("TweenService"):Create(ApplyButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(0, 160, 235)}):Play()
-			end)
-			
-			ApplyButton.MouseLeave:Connect(function()
-				game:GetService("TweenService"):Create(ApplyButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(0, 180, 255)}):Play()
-			end)
-			
-			colorPickerFrame:TweenSize(UDim2.new(0, 200, 0, 180), "Out", "Quad", 0.2, true)
-			
-			local closeConnection
-			closeConnection = game:GetService("UserInputService").InputBegan:Connect(function(input)
-				if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and colorPickerFrame then
-					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-					local framePos = colorPickerFrame.AbsolutePosition
-					local frameSize = colorPickerFrame.AbsoluteSize
-					
-					if not (mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
-						   mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y) then
-						colorPickerFrame:TweenSize(UDim2.new(0, 200, 0, 0), "Out", "Quad", 0.2, true, function()
-							colorPickerFrame:Destroy()
-							colorPickerFrame = nil
-							if closeConnection then
-								closeConnection:Disconnect()
-							end
-						end)
-					end
-				end
-			end)
-			
-			local buttonPos = ColorButton.AbsolutePosition
-			local buttonSize = ColorButton.AbsoluteSize
-			local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
-			
-			local rightSpace = screenSize.X - (buttonPos.X + buttonSize.X)
-			local leftSpace = buttonPos.X
-			
-			if rightSpace > 210 then
-				colorPickerFrame.Position = UDim2.new(0, buttonPos.X + buttonSize.X + 10, 0, buttonPos.Y)
-			elseif leftSpace > 210 then
-				colorPickerFrame.Position = UDim2.new(0, buttonPos.X - 210, 0, buttonPos.Y)
-			else
-				colorPickerFrame.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y + 10)
-			end
-		end
-		
-		ColorButton.MouseButton1Click:Connect(showColorPicker)
-		ColorButton.TouchTap:Connect(showColorPicker)
-		
-		ColorpickerContainer.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(ColorpickerContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-		end)
-		
-		ColorpickerContainer.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(ColorpickerContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-		end)
-	end
-	
-	function Lib:Textbox(name, placeholder, callback)
-		local TextboxContainer = Instance.new("Frame")
-		local UICorner_textbox = Instance.new("UICorner")
-		local TextboxName = Instance.new("TextLabel")
-		local TextboxInput = Instance.new("TextBox")
-		local UICorner_input = Instance.new("UICorner")
-		
-		TextboxContainer.Name = "TextboxContainer"
-		TextboxContainer.Parent = ContainerScroll
-		TextboxContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		TextboxContainer.BorderSizePixel = 0
-		TextboxContainer.Size = UDim2.new(0.9, 0, 0, 56)
-		
-		UICorner_textbox.CornerRadius = UDim.new(0, 6)
-		UICorner_textbox.Parent = TextboxContainer
-		
-		TextboxName.Name = "TextboxName"
-		TextboxName.Parent = TextboxContainer
-		TextboxName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		TextboxName.BackgroundTransparency = 1.000
-		TextboxName.Position = UDim2.new(0.05, 0, 0, 0)
-		TextboxName.Size = UDim2.new(0.9, 0, 0, 20)
-		TextboxName.Font = Enum.Font.Gotham
-		TextboxName.Text = name
-		TextboxName.TextColor3 = Color3.fromRGB(220, 220, 220)
-		TextboxName.TextSize = 13
-		TextboxName.TextXAlignment = Enum.TextXAlignment.Left
-		
-		TextboxInput.Name = "TextboxInput"
-		TextboxInput.Parent = TextboxContainer
-		TextboxInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		TextboxInput.BorderSizePixel = 0
-		TextboxInput.Position = UDim2.new(0.05, 0, 0.45, 0)
-		TextboxInput.Size = UDim2.new(0.9, 0, 0, 28)
-		TextboxInput.Font = Enum.Font.Gotham
-		TextboxInput.PlaceholderText = placeholder or "Enter text..."
-		TextboxInput.Text = ""
-		TextboxInput.TextColor3 = Color3.fromRGB(220, 220, 220)
-		TextboxInput.TextSize = 12
-		TextboxInput.ClearTextOnFocus = false
-		TextboxInput.TextTruncate = Enum.TextTruncate.AtEnd
-		
-		UICorner_input.CornerRadius = UDim.new(0, 4)
-		UICorner_input.Parent = TextboxInput
-		
-		local TextPadding = Instance.new("UIPadding")
-		TextPadding.Parent = TextboxInput
-		TextPadding.PaddingLeft = UDim.new(0, 8)
-		TextPadding.PaddingRight = UDim.new(0, 8)
-		
-		TextboxInput.Focused:Connect(function()
-			game:GetService("TweenService"):Create(TextboxInput, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
-		end)
-		
-		TextboxInput.FocusLost:Connect(function(enterPressed)
-			game:GetService("TweenService"):Create(TextboxInput, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
-			if enterPressed then
-				callback(TextboxInput.Text)
-			end
-		end)
-		
-		TextboxContainer.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(TextboxContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-		end)
-		
-		TextboxContainer.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(TextboxContainer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-		end)
-	end
-	
-	function Lib:Label(text)
-		local LabelContainer = Instance.new("Frame")
-		local UICorner_label = Instance.new("UICorner")
-		local LabelText = Instance.new("TextLabel")
-		
-		LabelContainer.Name = "LabelContainer"
-		LabelContainer.Parent = ContainerScroll
-		LabelContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		LabelContainer.BackgroundTransparency = 0
-		LabelContainer.Size = UDim2.new(0.9, 0, 0, 32)
-		
-		UICorner_label.CornerRadius = UDim.new(0, 6)
-		UICorner_label.Parent = LabelContainer
-		
-		LabelText.Name = "LabelText"
-		LabelText.Parent = LabelContainer
-		LabelText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		LabelText.BackgroundTransparency = 1.000
-		LabelText.Size = UDim2.new(1, -10, 1, 0)
-		LabelText.Position = UDim2.new(0, 5, 0, 0)
-		LabelText.Font = Enum.Font.Gotham
-		LabelText.Text = text
-		LabelText.TextColor3 = Color3.fromRGB(180, 180, 180)
-		LabelText.TextSize = 12
-		LabelText.TextWrapped = true
-	end
-	
-	function Lib:Separator()
-		local SeparatorContainer = Instance.new("Frame")
-		local SeparatorLine = Instance.new("Frame")
-		
-		SeparatorContainer.Name = "SeparatorContainer"
-		SeparatorContainer.Parent = ContainerScroll
-		SeparatorContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		SeparatorContainer.BackgroundTransparency = 1
-		SeparatorContainer.Size = UDim2.new(0.9, 0, 0, 10)
-		
-		SeparatorLine.Name = "SeparatorLine"
-		SeparatorLine.Parent = SeparatorContainer
-		SeparatorLine.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-		SeparatorLine.BorderSizePixel = 0
-		SeparatorLine.Position = UDim2.new(0.1, 0, 0.5, 0)
-		SeparatorLine.Size = UDim2.new(0.8, 0, 0, 1)
-	end
-	
-	return Lib
-	
+    close_button.MouseButton1Click:Connect(function()
+        local is_container_open = container_scroll.Size == UDim2.new(1, 0, 0, 400)
+        
+        if is_container_open then 
+            game:GetService("TweenService"):Create(close_button, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                TextColor3 = Color3.fromRGB(150, 150, 150),
+                Rotation = 180
+            }):Play()
+            update_close_button_text(true)
+            
+            container_scroll:TweenSize(
+                UDim2.new(1, 0, 0, 0), 
+                "Out", "Quad", 0.25, true
+            )
+            game:GetService("TweenService"):Create(window_background, TweenInfo.new(0.25), {
+                Size = UDim2.new(1, 0, 1, 0)
+            }):Play()
+            game:GetService("TweenService"):Create(window_shadow, TweenInfo.new(0.25), {
+                Size = UDim2.new(1, 30, 1, 30)
+            }):Play()
+        else
+            game:GetService("TweenService"):Create(close_button, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                TextColor3 = Color3.fromRGB(200, 200, 200),
+                Rotation = 0
+            }):Play()
+            update_close_button_text(false)
+            
+            container_scroll:TweenSize(
+                UDim2.new(1, 0, 0, 400), 
+                "Out", "Quad", 0.25, true
+            )
+            game:GetService("TweenService"):Create(window_background, TweenInfo.new(0.25), {
+                Size = UDim2.new(1, 0, 1, 400)
+            }):Play()
+            game:GetService("TweenService"):Create(window_shadow, TweenInfo.new(0.25), {
+                Size = UDim2.new(1, 30, 1, 430)
+            }):Play()
+        end
+    end)
+
+    close_button.TouchTap:Connect(function()
+        close_button.MouseButton1Click:Fire()
+    end)
+
+    container_layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        container_scroll.CanvasSize = UDim2.new(0, 0, 0, container_layout.AbsoluteContentSize.Y + 10)
+    end)
+
+    local window_methods = {}
+
+    function window_methods:button(name, callback)
+        local button_container = Instance.new("Frame")
+        local button_corner = Instance.new("UICorner")
+        local button = Instance.new("TextButton")
+        local button_name = Instance.new("TextLabel")
+        
+        button_container.Name = "ButtonContainer"
+        button_container.Parent = container_scroll
+        button_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        button_container.BorderSizePixel = 0
+        button_container.Size = UDim2.new(0.9, 0, 0, 36)
+        
+        button_corner.CornerRadius = UDim.new(0, 6)
+        button_corner.Parent = button_container
+        
+        button.Name = "Button"
+        button.Parent = button_container
+        button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        button.BackgroundTransparency = 1
+        button.Size = UDim2.new(1, 0, 1, 0)
+        button.Font = Enum.Font.SourceSans
+        button.Text = ""
+        button.TextColor3 = Color3.fromRGB(0, 0, 0)
+        button.TextSize = 14
+        button.AutoButtonColor = false
+        
+        button_name.Name = "ButtonName"
+        button_name.Parent = button_container
+        button_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        button_name.BackgroundTransparency = 1
+        button_name.Size = UDim2.new(1, 0, 1, 0)
+        button_name.Font = Enum.Font.Gotham
+        button_name.Text = name
+        button_name.TextColor3 = Color3.fromRGB(220, 220, 220)
+        button_name.TextSize = 13
+        
+        button.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            }):Play()
+        end)
+        
+        button.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+        end)
+        
+        local function trigger_callback()
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            }):Play()
+            task.wait(0.1)
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+            callback()
+        end
+        
+        button.MouseButton1Click:Connect(trigger_callback)
+        button.TouchTap:Connect(trigger_callback)
+    end
+    
+    function window_methods:toggle(name, callback)
+        local toggle_container = Instance.new("Frame")
+        local toggle_corner = Instance.new("UICorner")
+        local toggle_name = Instance.new("TextLabel")
+        local toggle_button = Instance.new("TextButton")
+        local toggle_button_corner = Instance.new("UICorner")
+        local toggle_indicator = Instance.new("Frame")
+        local indicator_corner = Instance.new("UICorner")
+        
+        toggle_container.Name = "ToggleContainer"
+        toggle_container.Parent = container_scroll
+        toggle_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        toggle_container.BorderSizePixel = 0
+        toggle_container.Size = UDim2.new(0.9, 0, 0, 36)
+        
+        toggle_corner.CornerRadius = UDim.new(0, 6)
+        toggle_corner.Parent = toggle_container
+        
+        toggle_name.Name = "ToggleName"
+        toggle_name.Parent = toggle_container
+        toggle_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        toggle_name.BackgroundTransparency = 1
+        toggle_name.Position = UDim2.new(0.05, 0, 0, 0)
+        toggle_name.Size = UDim2.new(0.65, 0, 1, 0)
+        toggle_name.Font = Enum.Font.Gotham
+        toggle_name.Text = name
+        toggle_name.TextColor3 = Color3.fromRGB(220, 220, 220)
+        toggle_name.TextSize = 13
+        toggle_name.TextXAlignment = Enum.TextXAlignment.Left
+        
+        toggle_button.Name = "ToggleButton"
+        toggle_button.Parent = toggle_container
+        toggle_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        toggle_button.BorderColor3 = Color3.fromRGB(27, 42, 53)
+        toggle_button.Position = UDim2.new(0.78, 0, 0.22, 0)
+        toggle_button.Size = UDim2.new(0, 40, 0, 20)
+        toggle_button.AutoButtonColor = false
+        toggle_button.Font = Enum.Font.SourceSans
+        toggle_button.Text = ""
+        toggle_button.TextColor3 = Color3.fromRGB(0, 0, 0)
+        toggle_button.TextSize = 14
+        
+        toggle_button_corner.CornerRadius = UDim.new(1, 0)
+        toggle_button_corner.Parent = toggle_button
+        
+        toggle_indicator.Name = "ToggleIndicator"
+        toggle_indicator.Parent = toggle_button
+        toggle_indicator.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        toggle_indicator.BorderSizePixel = 0
+        toggle_indicator.Position = UDim2.new(0.05, 0, 0.1, 0)
+        toggle_indicator.Size = UDim2.new(0, 16, 0, 16)
+        
+        indicator_corner.CornerRadius = UDim.new(1, 0)
+        indicator_corner.Parent = toggle_indicator
+        
+        local is_toggled = false
+        
+        local function toggle_state()
+            is_toggled = not is_toggled
+            if is_toggled then
+                game:GetService("TweenService"):Create(toggle_indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Position = UDim2.new(0.55, 0, 0.1, 0),
+                    BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+                }):Play()
+                game:GetService("TweenService"):Create(toggle_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(0, 100, 150)
+                }):Play()
+            else
+                game:GetService("TweenService"):Create(toggle_indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Position = UDim2.new(0.05, 0, 0.1, 0),
+                    BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+                }):Play()
+                game:GetService("TweenService"):Create(toggle_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                }):Play()
+            end
+            callback(is_toggled)
+        end
+        
+        toggle_button.MouseButton1Click:Connect(toggle_state)
+        toggle_button.TouchTap:Connect(toggle_state)
+        
+        toggle_container.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            }):Play()
+        end)
+        
+        toggle_container.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+        end)
+    end
+    
+    function window_methods:slider(name, min_value, max_value, default_value, callback)
+        local slider_container = Instance.new("Frame")
+        local slider_corner = Instance.new("UICorner")
+        local slider_name = Instance.new("TextLabel")
+        local slider_value = Instance.new("TextLabel")
+        local slider_track = Instance.new("Frame")
+        local track_corner = Instance.new("UICorner")
+        local slider_fill = Instance.new("Frame")
+        local fill_corner = Instance.new("UICorner")
+        local slider_button = Instance.new("TextButton")
+        
+        slider_container.Name = "SliderContainer"
+        slider_container.Parent = container_scroll
+        slider_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        slider_container.BorderSizePixel = 0
+        slider_container.Size = UDim2.new(0.9, 0, 0, 48)
+        
+        slider_corner.CornerRadius = UDim.new(0, 6)
+        slider_corner.Parent = slider_container
+        
+        slider_name.Name = "SliderName"
+        slider_name.Parent = slider_container
+        slider_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        slider_name.BackgroundTransparency = 1
+        slider_name.Position = UDim2.new(0.05, 0, 0, 0)
+        slider_name.Size = UDim2.new(0.6, 0, 0, 20)
+        slider_name.Font = Enum.Font.Gotham
+        slider_name.Text = name
+        slider_name.TextColor3 = Color3.fromRGB(220, 220, 220)
+        slider_name.TextSize = 13
+        slider_name.TextXAlignment = Enum.TextXAlignment.Left
+        
+        slider_value.Name = "SliderValue"
+        slider_value.Parent = slider_container
+        slider_value.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        slider_value.BackgroundTransparency = 1
+        slider_value.Position = UDim2.new(0.7, 0, 0, 0)
+        slider_value.Size = UDim2.new(0.25, 0, 0, 20)
+        slider_value.Font = Enum.Font.Gotham
+        slider_value.Text = tostring(default_value)
+        slider_value.TextColor3 = Color3.fromRGB(180, 180, 180)
+        slider_value.TextSize = 13
+        slider_value.TextXAlignment = Enum.TextXAlignment.Right
+        
+        slider_track.Name = "SliderTrack"
+        slider_track.Parent = slider_container
+        slider_track.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        slider_track.BorderSizePixel = 0
+        slider_track.Position = UDim2.new(0.05, 0, 0.6, 0)
+        slider_track.Size = UDim2.new(0.9, 0, 0, 4)
+        
+        track_corner.CornerRadius = UDim.new(1, 0)
+        track_corner.Parent = slider_track
+        
+        slider_fill.Name = "SliderFill"
+        slider_fill.Parent = slider_track
+        slider_fill.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+        slider_fill.BorderSizePixel = 0
+        slider_fill.Size = UDim2.new((default_value - min_value) / (max_value - min_value), 0, 1, 0)
+        
+        fill_corner.CornerRadius = UDim.new(1, 0)
+        fill_corner.Parent = slider_fill
+        
+        slider_button.Name = "SliderButton"
+        slider_button.Parent = slider_track
+        slider_button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        slider_button.BorderSizePixel = 0
+        slider_button.Position = UDim2.new((default_value - min_value) / (max_value - min_value), -8, 0, -6)
+        slider_button.Size = UDim2.new(0, 16, 0, 16)
+        slider_button.Font = Enum.Font.SourceSans
+        slider_button.Text = ""
+        slider_button.TextColor3 = Color3.fromRGB(0, 0, 0)
+        slider_button.TextSize = 14
+        slider_button.AutoButtonColor = false
+        
+        local button_corner = Instance.new("UICorner")
+        button_corner.CornerRadius = UDim.new(1, 0)
+        button_corner.Parent = slider_button
+        
+        local is_dragging = false
+        local current_value = default_value
+        
+        local function update_slider(input)
+            local relative_x = (input.Position.X - slider_track.AbsolutePosition.X) / slider_track.AbsoluteSize.X
+            local clamped_x = math.clamp(relative_x, 0, 1)
+            local pos = UDim2.new(clamped_x, 0, 0, 0)
+            local value = math.floor(min_value + (clamped_x * (max_value - min_value)))
+            
+            slider_fill.Size = UDim2.new(pos.X.Scale, 0, 1, 0)
+            slider_button.Position = UDim2.new(pos.X.Scale, -8, 0, -6)
+            slider_value.Text = tostring(value)
+            
+            if value ~= current_value then
+                current_value = value
+                callback(value)
+            end
+        end
+        
+        local function start_dragging(input)
+            is_dragging = true
+            game:GetService("TweenService"):Create(slider_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, 20, 0, 20)
+            }):Play()
+        end
+        
+        local function stop_dragging()
+            is_dragging = false
+            game:GetService("TweenService"):Create(slider_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, 16, 0, 16)
+            }):Play()
+        end
+        
+        slider_button.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                start_dragging(input)
+            end
+        end)
+        
+        slider_button.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                stop_dragging()
+            end
+        end)
+        
+        game:GetService("UserInputService").InputChanged:Connect(function(input)
+            if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                update_slider(input)
+            end
+        end)
+        
+        slider_track.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                update_slider(input)
+                start_dragging(input)
+            end
+        end)
+        
+        slider_track.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                stop_dragging()
+            end
+        end)
+        
+        slider_container.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(slider_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            }):Play()
+        end)
+        
+        slider_container.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(slider_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+        end)
+    end
+    
+    function window_methods:dropdown(name, options, callback)
+        local dropdown_container = Instance.new("Frame")
+        local dropdown_corner = Instance.new("UICorner")
+        local dropdown_name = Instance.new("TextLabel")
+        local dropdown_button = Instance.new("TextButton")
+        local dropdown_arrow = Instance.new("ImageLabel")
+        local dropdown_selected = Instance.new("TextLabel")
+        
+        dropdown_container.Name = "DropdownContainer"
+        dropdown_container.Parent = container_scroll
+        dropdown_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        dropdown_container.BorderSizePixel = 0
+        dropdown_container.Size = UDim2.new(0.9, 0, 0, 36)
+        dropdown_container.ClipsDescendants = false
+        
+        dropdown_corner.CornerRadius = UDim.new(0, 6)
+        dropdown_corner.Parent = dropdown_container
+        
+        dropdown_name.Name = "DropdownName"
+        dropdown_name.Parent = dropdown_container
+        dropdown_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        dropdown_name.BackgroundTransparency = 1
+        dropdown_name.Position = UDim2.new(0.05, 0, 0, 0)
+        dropdown_name.Size = UDim2.new(0.65, 0, 1, 0)
+        dropdown_name.Font = Enum.Font.Gotham
+        dropdown_name.Text = name
+        dropdown_name.TextColor3 = Color3.fromRGB(220, 220, 220)
+        dropdown_name.TextSize = 13
+        dropdown_name.TextXAlignment = Enum.TextXAlignment.Left
+        
+        dropdown_button.Name = "DropdownButton"
+        dropdown_button.Parent = dropdown_container
+        dropdown_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        dropdown_button.BackgroundTransparency = 0
+        dropdown_button.Position = UDim2.new(0.7, 0, 0.22, 0)
+        dropdown_button.Size = UDim2.new(0.25, 0, 0, 20)
+        dropdown_button.Font = Enum.Font.SourceSans
+        dropdown_button.Text = ""
+        dropdown_button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        dropdown_button.TextSize = 12
+        dropdown_button.AutoButtonColor = false
+        
+        local button_corner = Instance.new("UICorner")
+        button_corner.CornerRadius = UDim.new(0, 4)
+        button_corner.Parent = dropdown_button
+        
+        dropdown_selected.Name = "DropdownSelected"
+        dropdown_selected.Parent = dropdown_button
+        dropdown_selected.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        dropdown_selected.BackgroundTransparency = 1
+        dropdown_selected.Position = UDim2.new(0.05, 0, 0, 0)
+        dropdown_selected.Size = UDim2.new(0.7, 0, 1, 0)
+        dropdown_selected.Font = Enum.Font.Gotham
+        dropdown_selected.Text = "Select"
+        dropdown_selected.TextColor3 = Color3.fromRGB(200, 200, 200)
+        dropdown_selected.TextSize = 11
+        dropdown_selected.TextXAlignment = Enum.TextXAlignment.Left
+        
+        dropdown_arrow.Name = "DropdownArrow"
+        dropdown_arrow.Parent = dropdown_button
+        dropdown_arrow.BackgroundTransparency = 1
+        dropdown_arrow.Position = UDim2.new(0.8, 0, 0.15, 0)
+        dropdown_arrow.Size = UDim2.new(0, 12, 0, 12)
+        dropdown_arrow.Image = "rbxassetid://153287088"
+        dropdown_arrow.ImageColor3 = Color3.fromRGB(200, 200, 200)
+        dropdown_arrow.Rotation = 90
+        
+        local dropdown_list = Instance.new("Frame")
+        local dropdown_scroll = Instance.new("ScrollingFrame")
+        local list_layout = Instance.new("UIListLayout")
+        
+        dropdown_list.Name = "DropdownList"
+        dropdown_list.Parent = ui_lib
+        dropdown_list.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        dropdown_list.BorderSizePixel = 0
+        dropdown_list.Size = UDim2.new(0, dropdown_button.AbsoluteSize.X, 0, 0)
+        dropdown_list.Visible = false
+        dropdown_list.ZIndex = 20
+        dropdown_list.ClipsDescendants = true
+        
+        local dropdown_shadow = Instance.new("ImageLabel")
+        dropdown_shadow.Name = "DropdownShadow"
+        dropdown_shadow.Parent = dropdown_list
+        dropdown_shadow.BackgroundTransparency = 1
+        dropdown_shadow.Size = UDim2.new(1, 15, 1, 15)
+        dropdown_shadow.Position = UDim2.new(0, -8, 0, -8)
+        dropdown_shadow.Image = "rbxassetid://5554236805"
+        dropdown_shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        dropdown_shadow.ImageTransparency = 0.8
+        dropdown_shadow.ScaleType = Enum.ScaleType.Slice
+        dropdown_shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+        dropdown_shadow.ZIndex = 19
+        
+        local list_corner = Instance.new("UICorner")
+        list_corner.CornerRadius = UDim.new(0, 6)
+        list_corner.Parent = dropdown_list
+        
+        dropdown_scroll.Name = "DropdownScroll"
+        dropdown_scroll.Parent = dropdown_list
+        dropdown_scroll.Active = true
+        dropdown_scroll.BackgroundTransparency = 1
+        dropdown_scroll.BorderSizePixel = 0
+        dropdown_scroll.Size = UDim2.new(1, -6, 1, -6)
+        dropdown_scroll.Position = UDim2.new(0, 3, 0, 3)
+        dropdown_scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        dropdown_scroll.ScrollBarThickness = 3
+        dropdown_scroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+        dropdown_scroll.ScrollBarImageTransparency = 0.3
+        dropdown_scroll.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+        dropdown_scroll.ZIndex = 21
+        
+        list_layout.Parent = dropdown_scroll
+        list_layout.SortOrder = Enum.SortOrder.LayoutOrder
+        list_layout.Padding = UDim.new(0, 3)
+        
+        local is_open = false
+        local selected_option = nil
+        
+        local function update_list_height()
+            local item_count = #options
+            local height = math.min(item_count * 28 + 6, 140)
+            dropdown_scroll.CanvasSize = UDim2.new(0, 0, 0, item_count * 28)
+            return height
+        end
+        
+        local function toggle_dropdown()
+            is_open = not is_open
+            if is_open then
+                dropdown_list.Visible = true
+                dropdown_list.Position = UDim2.new(
+                    0, dropdown_button.AbsolutePosition.X,
+                    0, dropdown_button.AbsolutePosition.Y + dropdown_button.AbsoluteSize.Y + 4
+                )
+                dropdown_list.Size = UDim2.new(0, dropdown_button.AbsoluteSize.X, 0, 0)
+                game:GetService("TweenService"):Create(dropdown_arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Rotation = 270
+                }):Play()
+                game:GetService("TweenService"):Create(dropdown_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                }):Play()
+                dropdown_list:TweenSize(
+                    UDim2.new(0, dropdown_button.AbsoluteSize.X, 0, update_list_height()),
+                    "Out", "Quad", 0.2, true
+                )
+            else
+                game:GetService("TweenService"):Create(dropdown_arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Rotation = 90
+                }):Play()
+                game:GetService("TweenService"):Create(dropdown_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                }):Play()
+                dropdown_list:TweenSize(
+                    UDim2.new(0, dropdown_button.AbsoluteSize.X, 0, 0),
+                    "Out", "Quad", 0.2, true,
+                    function()
+                        dropdown_list.Visible = false
+                    end
+                )
+            end
+        end
+        
+        dropdown_button.MouseButton1Click:Connect(toggle_dropdown)
+        dropdown_button.TouchTap:Connect(toggle_dropdown)
+        
+        for i, option in ipairs(options) do
+            local option_button = Instance.new("TextButton")
+            local option_text = Instance.new("TextLabel")
+            
+            option_button.Name = "Option_" .. option
+            option_button.Parent = dropdown_scroll
+            option_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            option_button.BorderSizePixel = 0
+            option_button.Size = UDim2.new(1, 0, 0, 26)
+            option_button.Font = Enum.Font.SourceSans
+            option_button.Text = ""
+            option_button.TextColor3 = Color3.fromRGB(0, 0, 0)
+            option_button.TextSize = 14
+            option_button.AutoButtonColor = false
+            option_button.ZIndex = 22
+            
+            local option_corner = Instance.new("UICorner")
+            option_corner.CornerRadius = UDim.new(0, 4)
+            option_corner.Parent = option_button
+            
+            option_text.Name = "OptionText"
+            option_text.Parent = option_button
+            option_text.BackgroundTransparency = 1
+            option_text.Size = UDim2.new(1, -8, 1, 0)
+            option_text.Position = UDim2.new(0, 4, 0, 0)
+            option_text.Font = Enum.Font.Gotham
+            option_text.Text = option
+            option_text.TextColor3 = Color3.fromRGB(220, 220, 220)
+            option_text.TextSize = 11
+            option_text.TextXAlignment = Enum.TextXAlignment.Left
+            option_text.ZIndex = 24
+            
+            local function select_option()
+                selected_option = option
+                dropdown_selected.Text = option
+                toggle_dropdown()
+                callback(option)
+            end
+            
+            option_button.MouseButton1Click:Connect(select_option)
+            option_button.TouchTap:Connect(select_option)
+            
+            option_button.MouseEnter:Connect(function()
+                game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                }):Play()
+            end)
+            
+            option_button.MouseLeave:Connect(function()
+                game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                }):Play()
+            end)
+        end
+        
+        update_list_height()
+        
+        local connection
+        connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and is_open then
+                local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
+                local dropdown_pos = dropdown_list.AbsolutePosition
+                local dropdown_size = dropdown_list.AbsoluteSize
+                
+                if not (mouse_pos.X >= dropdown_pos.X and mouse_pos.X <= dropdown_pos.X + dropdown_size.X and
+                       mouse_pos.Y >= dropdown_pos.Y and mouse_pos.Y <= dropdown_pos.Y + dropdown_size.Y) then
+                    if is_open then
+                        toggle_dropdown()
+                    end
+                end
+            end
+        end)
+        
+        window_frame.Destroying:Connect(function()
+            if connection then
+                connection:Disconnect()
+            end
+        end)
+        
+        dropdown_container.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(dropdown_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            }):Play()
+        end)
+        
+        dropdown_container.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(dropdown_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+        end)
+    end
+    
+    function window_methods:colorpicker(name, default_color, callback)
+        local colorpicker_container = Instance.new("Frame")
+        local colorpicker_corner = Instance.new("UICorner")
+        local colorpicker_name = Instance.new("TextLabel")
+        local color_button = Instance.new("TextButton")
+        local color_preview = Instance.new("Frame")
+        local preview_corner = Instance.new("UICorner")
+        
+        colorpicker_container.Name = "ColorpickerContainer"
+        colorpicker_container.Parent = container_scroll
+        colorpicker_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        colorpicker_container.BorderSizePixel = 0
+        colorpicker_container.Size = UDim2.new(0.9, 0, 0, 36)
+        
+        colorpicker_corner.CornerRadius = UDim.new(0, 6)
+        colorpicker_corner.Parent = colorpicker_container
+        
+        colorpicker_name.Name = "ColorpickerName"
+        colorpicker_name.Parent = colorpicker_container
+        colorpicker_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        colorpicker_name.BackgroundTransparency = 1
+        colorpicker_name.Position = UDim2.new(0.05, 0, 0, 0)
+        colorpicker_name.Size = UDim2.new(0.65, 0, 1, 0)
+        colorpicker_name.Font = Enum.Font.Gotham
+        colorpicker_name.Text = name
+        colorpicker_name.TextColor3 = Color3.fromRGB(220, 220, 220)
+        colorpicker_name.TextSize = 13
+        colorpicker_name.TextXAlignment = Enum.TextXAlignment.Left
+        
+        color_button.Name = "ColorButton"
+        color_button.Parent = colorpicker_container
+        color_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        color_button.BackgroundTransparency = 0
+        color_button.Position = UDim2.new(0.7, 0, 0.22, 0)
+        color_button.Size = UDim2.new(0.25, 0, 0, 20)
+        color_button.Font = Enum.Font.SourceSans
+        color_button.Text = ""
+        color_button.TextColor3 = Color3.fromRGB(0, 0, 0)
+        color_button.TextSize = 14
+        color_button.AutoButtonColor = false
+        
+        local button_corner = Instance.new("UICorner")
+        button_corner.CornerRadius = UDim.new(0, 4)
+        button_corner.Parent = color_button
+        
+        color_preview.Name = "ColorPreview"
+        color_preview.Parent = color_button
+        color_preview.BackgroundColor3 = default_color or Color3.fromRGB(0, 180, 255)
+        color_preview.BorderSizePixel = 0
+        color_preview.Position = UDim2.new(0.1, 0, 0.1, 0)
+        color_preview.Size = UDim2.new(0.8, 0, 0, 16)
+        
+        preview_corner.CornerRadius = UDim.new(0, 3)
+        preview_corner.Parent = color_preview
+        
+        local color_picker_frame = nil
+        
+        local function show_color_picker()
+            if color_picker_frame then
+                color_picker_frame:Destroy()
+                color_picker_frame = nil
+                return
+            end
+            
+            color_picker_frame = Instance.new("Frame")
+            local frame_corner = Instance.new("UICorner")
+            local color_display = Instance.new("Frame")
+            local display_corner = Instance.new("UICorner")
+            local hex_input = Instance.new("TextBox")
+            local hex_corner = Instance.new("UICorner")
+            local apply_button = Instance.new("TextButton")
+            local apply_corner = Instance.new("UICorner")
+            
+            local current_color = color_preview.BackgroundColor3
+            local r, g, b = math.floor(current_color.r * 255), math.floor(current_color.g * 255), math.floor(current_color.b * 255)
+            
+            color_picker_frame.Name = "ColorPickerFrame"
+            color_picker_frame.Parent = ui_lib
+            color_picker_frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            color_picker_frame.BorderSizePixel = 0
+            color_picker_frame.Position = UDim2.new(0, 0, 0, 0)
+            color_picker_frame.Size = UDim2.new(0, 220, 0, 0)
+            color_picker_frame.ZIndex = 30
+            color_picker_frame.ClipsDescendants = true
+            
+            frame_corner.CornerRadius = UDim.new(0, 8)
+            frame_corner.Parent = color_picker_frame
+            
+            local color_picker_shadow = Instance.new("ImageLabel")
+            color_picker_shadow.Name = "ColorPickerShadow"
+            color_picker_shadow.Parent = color_picker_frame
+            color_picker_shadow.BackgroundTransparency = 1
+            color_picker_shadow.Size = UDim2.new(1, 20, 1, 20)
+            color_picker_shadow.Position = UDim2.new(0, -10, 0, -10)
+            color_picker_shadow.Image = "rbxassetid://5554236805"
+            color_picker_shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+            color_picker_shadow.ImageTransparency = 0.8
+            color_picker_shadow.ScaleType = Enum.ScaleType.Slice
+            color_picker_shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+            color_picker_shadow.ZIndex = 29
+            
+            color_display.Name = "ColorDisplay"
+            color_display.Parent = color_picker_frame
+            color_display.BackgroundColor3 = current_color
+            color_display.BorderSizePixel = 0
+            color_display.Position = UDim2.new(0.05, 0, 0.05, 0)
+            color_display.Size = UDim2.new(0.9, 0, 0, 30)
+            
+            display_corner.CornerRadius = UDim.new(0, 6)
+            display_corner.Parent = color_display
+            
+            hex_input.Name = "HexInput"
+            hex_input.Parent = color_picker_frame
+            hex_input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            hex_input.BorderSizePixel = 0
+            hex_input.Position = UDim2.new(0.05, 0, 0.25, 0)
+            hex_input.Size = UDim2.new(0.9, 0, 0, 25)
+            hex_input.Font = Enum.Font.Gotham
+            hex_input.PlaceholderText = "Hex Color"
+            hex_input.Text = string.format("#%02X%02X%02X", r, g, b)
+            hex_input.TextColor3 = Color3.fromRGB(220, 220, 220)
+            hex_input.TextSize = 12
+            hex_input.ClearTextOnFocus = false
+            
+            hex_corner.CornerRadius = UDim.new(0, 4)
+            hex_corner.Parent = hex_input
+            
+            local hex_padding = Instance.new("UIPadding")
+            hex_padding.Parent = hex_input
+            hex_padding.PaddingLeft = UDim.new(0, 8)
+            hex_padding.PaddingRight = UDim.new(0, 8)
+            
+            local function create_rgb_slider(name, y_pos, value, color)
+                local container = Instance.new("Frame")
+                local name_label = Instance.new("TextLabel")
+                local track = Instance.new("Frame")
+                local fill = Instance.new("Frame")
+                local button = Instance.new("TextButton")
+                local value_label = Instance.new("TextLabel")
+                
+                container.Name = name .. "Container"
+                container.Parent = color_picker_frame
+                container.BackgroundTransparency = 1
+                container.Position = UDim2.new(0.05, 0, y_pos, 0)
+                container.Size = UDim2.new(0.9, 0, 0, 25)
+                
+                name_label.Name = name .. "Name"
+                name_label.Parent = container
+                name_label.BackgroundTransparency = 1
+                name_label.Position = UDim2.new(0, 0, 0, 0)
+                name_label.Size = UDim2.new(0.15, 0, 1, 0)
+                name_label.Font = Enum.Font.Gotham
+                name_label.Text = name
+                name_label.TextColor3 = Color3.fromRGB(200, 200, 200)
+                name_label.TextSize = 12
+                name_label.TextXAlignment = Enum.TextXAlignment.Left
+                
+                track.Name = name .. "Track"
+                track.Parent = container
+                track.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                track.BorderSizePixel = 0
+                track.Position = UDim2.new(0.2, 0, 0.5, 0)
+                track.Size = UDim2.new(0.55, 0, 0, 4)
+                
+                local track_corner = Instance.new("UICorner")
+                track_corner.CornerRadius = UDim.new(1, 0)
+                track_corner.Parent = track
+                
+                fill.Name = name .. "Fill"
+                fill.Parent = track
+                fill.BackgroundColor3 = color
+                fill.BorderSizePixel = 0
+                fill.Size = UDim2.new(value / 255, 0, 1, 0)
+                
+                local fill_corner = Instance.new("UICorner")
+                fill_corner.CornerRadius = UDim.new(1, 0)
+                fill_corner.Parent = fill
+                
+                button.Name = name .. "Button"
+                button.Parent = track
+                button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                button.BorderSizePixel = 0
+                button.Position = UDim2.new(value / 255, -6, 0, -5)
+                button.Size = UDim2.new(0, 14, 0, 14)
+                button.Font = Enum.Font.SourceSans
+                button.Text = ""
+                button.TextColor3 = Color3.fromRGB(0, 0, 0)
+                button.TextSize = 14
+                button.AutoButtonColor = false
+                
+                local button_corner = Instance.new("UICorner")
+                button_corner.CornerRadius = UDim.new(1, 0)
+                button_corner.Parent = button
+                
+                value_label.Name = name .. "Value"
+                value_label.Parent = container
+                value_label.BackgroundTransparency = 1
+                value_label.Position = UDim2.new(0.8, 0, 0, 0)
+                value_label.Size = UDim2.new(0.2, 0, 1, 0)
+                value_label.Font = Enum.Font.Gotham
+                value_label.Text = tostring(value)
+                value_label.TextColor3 = Color3.fromRGB(180, 180, 180)
+                value_label.TextSize = 12
+                value_label.TextXAlignment = Enum.TextXAlignment.Right
+                
+                return {container = container, track = track, fill = fill, button = button, value = value_label}
+            end
+            
+            local r_data = create_rgb_slider("R", 0.4, r, Color3.fromRGB(255, 50, 50))
+            local g_data = create_rgb_slider("G", 0.55, g, Color3.fromRGB(50, 255, 50))
+            local b_data = create_rgb_slider("B", 0.7, b, Color3.fromRGB(50, 50, 255))
+            
+            apply_button.Name = "ApplyButton"
+            apply_button.Parent = color_picker_frame
+            apply_button.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+            apply_button.BorderSizePixel = 0
+            apply_button.Position = UDim2.new(0.05, 0, 0.85, 0)
+            apply_button.Size = UDim2.new(0.9, 0, 0, 25)
+            apply_button.Font = Enum.Font.GothamSemibold
+            apply_button.Text = "Apply"
+            apply_button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            apply_button.TextSize = 13
+            apply_button.AutoButtonColor = false
+            
+            apply_corner.CornerRadius = UDim.new(0, 6)
+            apply_corner.Parent = apply_button
+            
+            local function update_color()
+                current_color = Color3.fromRGB(r, g, b)
+                color_display.BackgroundColor3 = current_color
+                hex_input.Text = string.format("#%02X%02X%02X", r, g, b)
+            end
+            
+            local function update_from_hex(hex)
+                hex = hex:gsub("#", "")
+                if #hex == 6 then
+                    local success, color = pcall(function()
+                        return Color3.fromHex(hex)
+                    end)
+                    if success then
+                        r = math.floor(color.r * 255)
+                        g = math.floor(color.g * 255)
+                        b = math.floor(color.b * 255)
+                        
+                        r_data.fill.Size = UDim2.new(r / 255, 0, 1, 0)
+                        r_data.button.Position = UDim2.new(r / 255, -6, 0, -5)
+                        r_data.value.Text = tostring(r)
+                        
+                        g_data.fill.Size = UDim2.new(g / 255, 0, 1, 0)
+                        g_data.button.Position = UDim2.new(g / 255, -6, 0, -5)
+                        g_data.value.Text = tostring(g)
+                        
+                        b_data.fill.Size = UDim2.new(b / 255, 0, 1, 0)
+                        b_data.button.Position = UDim2.new(b / 255, -6, 0, -5)
+                        b_data.value.Text = tostring(b)
+                        
+                        update_color()
+                    end
+                end
+            end
+            
+            hex_input.FocusLost:Connect(function(enter_pressed)
+                if enter_pressed then
+                    update_from_hex(hex_input.Text)
+                end
+            end)
+            
+            local function create_slider_logic(data, is_r, is_g, is_b)
+                local is_dragging = false
+                
+                local function update_slider(input)
+                    local relative_x = (input.Position.X - data.track.AbsolutePosition.X) / data.track.AbsoluteSize.X
+                    local clamped_x = math.clamp(relative_x, 0, 1)
+                    local value = math.floor(clamped_x * 255)
+                    
+                    data.fill.Size = UDim2.new(clamped_x, 0, 1, 0)
+                    data.button.Position = UDim2.new(clamped_x, -6, 0, -5)
+                    data.value.Text = tostring(value)
+                    
+                    if is_r then r = value
+                    elseif is_g then g = value
+                    elseif is_b then b = value end
+                    
+                    update_color()
+                end
+                
+                local function start_dragging(input)
+                    is_dragging = true
+                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                        Size = UDim2.new(0, 18, 0, 18)
+                    }):Play()
+                end
+                
+                local function stop_dragging()
+                    is_dragging = false
+                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                        Size = UDim2.new(0, 14, 0, 14)
+                    }):Play()
+                end
+                
+                data.button.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        start_dragging(input)
+                    end
+                end)
+                
+                data.button.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        stop_dragging()
+                    end
+                end)
+                
+                data.track.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        update_slider(input)
+                        start_dragging(input)
+                    end
+                end)
+                
+                data.track.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        stop_dragging()
+                    end
+                end)
+                
+                game:GetService("UserInputService").InputChanged:Connect(function(input)
+                    if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        update_slider(input)
+                    end
+                end)
+            end
+            
+            create_slider_logic(r_data, true, false, false)
+            create_slider_logic(g_data, false, true, false)
+            create_slider_logic(b_data, false, false, true)
+            
+            local function apply_color()
+                callback(current_color)
+                color_preview.BackgroundColor3 = current_color
+                color_picker_frame:TweenSize(UDim2.new(0, 220, 0, 0), "Out", "Quad", 0.2, true, function()
+                    color_picker_frame:Destroy()
+                    color_picker_frame = nil
+                end)
+            end
+            
+            apply_button.MouseButton1Click:Connect(apply_color)
+            apply_button.TouchTap:Connect(apply_color)
+            
+            apply_button.MouseEnter:Connect(function()
+                game:GetService("TweenService"):Create(apply_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(0, 160, 235)
+                }):Play()
+            end)
+            
+            apply_button.MouseLeave:Connect(function()
+                game:GetService("TweenService"):Create(apply_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+                }):Play()
+            end)
+            
+            color_picker_frame:TweenSize(UDim2.new(0, 220, 0, 180), "Out", "Quad", 0.2, true)
+            
+            local close_connection
+            close_connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+                if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and color_picker_frame then
+                    local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
+                    local frame_pos = color_picker_frame.AbsolutePosition
+                    local frame_size = color_picker_frame.AbsoluteSize
+                    
+                    if not (mouse_pos.X >= frame_pos.X and mouse_pos.X <= frame_pos.X + frame_size.X and
+                           mouse_pos.Y >= frame_pos.Y and mouse_pos.Y <= frame_pos.Y + frame_size.Y) then
+                        color_picker_frame:TweenSize(UDim2.new(0, 220, 0, 0), "Out", "Quad", 0.2, true, function()
+                            color_picker_frame:Destroy()
+                            color_picker_frame = nil
+                            if close_connection then
+                                close_connection:Disconnect()
+                            end
+                        end)
+                    end
+                end
+            end)
+            
+            local button_pos = color_button.AbsolutePosition
+            local button_size = color_button.AbsoluteSize
+            local screen_size = game:GetService("Workspace").CurrentCamera.ViewportSize
+            
+            local right_space = screen_size.X - (button_pos.X + button_size.X)
+            local left_space = button_pos.X
+            
+            if right_space > 230 then
+                color_picker_frame.Position = UDim2.new(0, button_pos.X + button_size.X + 10, 0, button_pos.Y)
+            elseif left_space > 230 then
+                color_picker_frame.Position = UDim2.new(0, button_pos.X - 230, 0, button_pos.Y)
+            else
+                color_picker_frame.Position = UDim2.new(0, button_pos.X, 0, button_pos.Y + button_size.Y + 10)
+            end
+        end
+        
+        color_button.MouseButton1Click:Connect(show_color_picker)
+        color_button.TouchTap:Connect(show_color_picker)
+        
+        colorpicker_container.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(colorpicker_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            }):Play()
+        end)
+        
+        colorpicker_container.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(colorpicker_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+        end)
+    end
+    
+    function window_methods:textbox(name, placeholder, callback)
+        local textbox_container = Instance.new("Frame")
+        local textbox_corner = Instance.new("UICorner")
+        local textbox_name = Instance.new("TextLabel")
+        local textbox_input = Instance.new("TextBox")
+        local input_corner = Instance.new("UICorner")
+        
+        textbox_container.Name = "TextboxContainer"
+        textbox_container.Parent = container_scroll
+        textbox_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        textbox_container.BorderSizePixel = 0
+        textbox_container.Size = UDim2.new(0.9, 0, 0, 56)
+        
+        textbox_corner.CornerRadius = UDim.new(0, 6)
+        textbox_corner.Parent = textbox_container
+        
+        textbox_name.Name = "TextboxName"
+        textbox_name.Parent = textbox_container
+        textbox_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        textbox_name.BackgroundTransparency = 1
+        textbox_name.Position = UDim2.new(0.05, 0, 0, 0)
+        textbox_name.Size = UDim2.new(0.9, 0, 0, 20)
+        textbox_name.Font = Enum.Font.Gotham
+        textbox_name.Text = name
+        textbox_name.TextColor3 = Color3.fromRGB(220, 220, 220)
+        textbox_name.TextSize = 13
+        textbox_name.TextXAlignment = Enum.TextXAlignment.Left
+        
+        textbox_input.Name = "TextboxInput"
+        textbox_input.Parent = textbox_container
+        textbox_input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        textbox_input.BorderSizePixel = 0
+        textbox_input.Position = UDim2.new(0.05, 0, 0.45, 0)
+        textbox_input.Size = UDim2.new(0.9, 0, 0, 28)
+        textbox_input.Font = Enum.Font.Gotham
+        textbox_input.PlaceholderText = placeholder or "Enter text..."
+        textbox_input.Text = ""
+        textbox_input.TextColor3 = Color3.fromRGB(220, 220, 220)
+        textbox_input.TextSize = 12
+        textbox_input.ClearTextOnFocus = false
+        textbox_input.TextTruncate = Enum.TextTruncate.AtEnd
+        
+        input_corner.CornerRadius = UDim.new(0, 4)
+        input_corner.Parent = textbox_input
+        
+        local text_padding = Instance.new("UIPadding")
+        text_padding.Parent = textbox_input
+        text_padding.PaddingLeft = UDim.new(0, 8)
+        text_padding.PaddingRight = UDim.new(0, 8)
+        
+        textbox_input.Focused:Connect(function()
+            game:GetService("TweenService"):Create(textbox_input, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            }):Play()
+        end)
+        
+        textbox_input.FocusLost:Connect(function(enter_pressed)
+            game:GetService("TweenService"):Create(textbox_input, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            }):Play()
+            if enter_pressed then
+                callback(textbox_input.Text)
+            end
+        end)
+        
+        textbox_container.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(textbox_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            }):Play()
+        end)
+        
+        textbox_container.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(textbox_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            }):Play()
+        end)
+    end
+    
+    function window_methods:label(text)
+        local label_container = Instance.new("Frame")
+        local label_corner = Instance.new("UICorner")
+        local label_text = Instance.new("TextLabel")
+        
+        label_container.Name = "LabelContainer"
+        label_container.Parent = container_scroll
+        label_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        label_container.BackgroundTransparency = 0
+        label_container.Size = UDim2.new(0.9, 0, 0, 32)
+        
+        label_corner.CornerRadius = UDim.new(0, 6)
+        label_corner.Parent = label_container
+        
+        label_text.Name = "LabelText"
+        label_text.Parent = label_container
+        label_text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        label_text.BackgroundTransparency = 1
+        label_text.Size = UDim2.new(1, -10, 1, 0)
+        label_text.Position = UDim2.new(0, 5, 0, 0)
+        label_text.Font = Enum.Font.Gotham
+        label_text.Text = text
+        label_text.TextColor3 = Color3.fromRGB(180, 180, 180)
+        label_text.TextSize = 12
+        label_text.TextWrapped = true
+    end
+    
+    function window_methods:separator()
+        local separator_container = Instance.new("Frame")
+        local separator_line = Instance.new("Frame")
+        
+        separator_container.Name = "SeparatorContainer"
+        separator_container.Parent = container_scroll
+        separator_container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        separator_container.BackgroundTransparency = 1
+        separator_container.Size = UDim2.new(0.9, 0, 0, 10)
+        
+        separator_line.Name = "SeparatorLine"
+        separator_line.Parent = separator_container
+        separator_line.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        separator_line.BorderSizePixel = 0
+        separator_line.Position = UDim2.new(0.1, 0, 0.5, 0)
+        separator_line.Size = UDim2.new(0.8, 0, 0, 1)
+    end
+    
+    return window_methods
 end
 
-return Library
+return library
