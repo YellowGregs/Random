@@ -10,6 +10,10 @@ ui_lib.Parent = game:GetService("CoreGui")
 ui_lib.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ui_lib.ResetOnSpawn = false
 
+local user_input_service = game:GetService("UserInputService")
+local is_mobile = user_input_service.TouchEnabled
+local is_tablet = user_input_service.TouchEnabled and not user_input_service.MouseEnabled
+
 local function get_next_window_pos()
     local biggest = 0
     local last_window = nil
@@ -27,9 +31,14 @@ local function get_next_window_pos()
     return biggest
 end
 
-local library = {}
+local Library = {}
+local library = Library
 
-function library:window(title)
+function Library:Window(title)
+    local base_width = is_mobile and 220 or 280
+    local base_height = is_mobile and 35 or 40
+    local content_height = is_mobile and 350 or 400
+    
     local window_frame = Instance.new("Frame")
     local window_corner = Instance.new("UICorner")
     local container_scroll = Instance.new("ScrollingFrame")
@@ -39,13 +48,14 @@ function library:window(title)
     local window_shadow = Instance.new("ImageLabel")
     local window_background = Instance.new("Frame")
     local background_corner = Instance.new("UICorner")
+    local resize_handle = Instance.new("TextButton")
 
     window_frame.Name = "WindowFrame"
     window_frame.Parent = ui_lib
     window_frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     window_frame.BorderSizePixel = 0
     window_frame.Position = UDim2.new(0, get_next_window_pos(), 0.01, 0)
-    window_frame.Size = UDim2.new(0, 280, 0, 40)
+    window_frame.Size = UDim2.new(0, base_width, 0, base_height)
     window_frame.Active = true
     window_frame.Draggable = true
 
@@ -56,7 +66,7 @@ function library:window(title)
     window_background.Parent = window_frame
     window_background.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     window_background.BorderSizePixel = 0
-    window_background.Size = UDim2.new(1, 0, 1, 400)
+    window_background.Size = UDim2.new(1, 0, 1, content_height)
     window_background.ZIndex = -1
     
     background_corner.CornerRadius = UDim.new(0, 8)
@@ -66,7 +76,7 @@ function library:window(title)
     window_shadow.Parent = window_frame
     window_shadow.BackgroundTransparency = 1
     window_shadow.Position = UDim2.new(0, -15, 0, -15)
-    window_shadow.Size = UDim2.new(1, 30, 1, 430)
+    window_shadow.Size = UDim2.new(1, 30, 1, content_height + 30)
     window_shadow.Image = "rbxassetid://5554236805"
     window_shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
     window_shadow.ImageTransparency = 0.8
@@ -80,9 +90,9 @@ function library:window(title)
     container_scroll.BackgroundTransparency = 1
     container_scroll.ClipsDescendants = true
     container_scroll.Position = UDim2.new(0, 0, 1, 0)
-    container_scroll.Size = UDim2.new(1, 0, 0, 400)
+    container_scroll.Size = UDim2.new(1, 0, 0, content_height)
     container_scroll.ZIndex = 2
-    container_scroll.ScrollBarThickness = 3
+    container_scroll.ScrollBarThickness = is_mobile and 5 or 3
     container_scroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
     container_scroll.ScrollBarImageTransparency = 0.6
     container_scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -90,7 +100,7 @@ function library:window(title)
     container_layout.Parent = container_scroll
     container_layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     container_layout.SortOrder = Enum.SortOrder.LayoutOrder
-    container_layout.Padding = UDim.new(0, 8)
+    container_layout.Padding = UDim.new(0, is_mobile and 6 or 8)
     container_layout.VerticalAlignment = Enum.VerticalAlignment.Top
 
     window_title.Name = "WindowTitle"
@@ -102,7 +112,7 @@ function library:window(title)
     window_title.Font = Enum.Font.GothamSemibold
     window_title.Text = title
     window_title.TextColor3 = Color3.fromRGB(240, 240, 240)
-    window_title.TextSize = 15
+    window_title.TextSize = is_mobile and 13 or 15
     window_title.TextWrapped = true
     window_title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -110,75 +120,120 @@ function library:window(title)
     close_button.Parent = window_frame
     close_button.BackgroundTransparency = 1
     close_button.Position = UDim2.new(0.85, 0, 0.15, 0)
-    close_button.Size = UDim2.new(0, 24, 0, 24)
+    close_button.Size = UDim2.new(0, is_mobile and 22 or 24, 0, is_mobile and 22 or 24)
     close_button.ZIndex = 2
-    close_button.Font = Enum.Font.GothamSemibold
-    close_button.Text = "X"
+    close_button.Font = Enum.Font.GothamBold
+    close_button.Text = "−"
     close_button.TextColor3 = Color3.fromRGB(200, 200, 200)
-    close_button.TextSize = 18
+    close_button.TextSize = is_mobile and 16 or 18
     close_button.AutoButtonColor = false
 
-    local function update_close_button_text(is_closed)
-        if is_closed then
-            close_button.Text = "-"
-            close_button.Rotation = 0
-        else
-            close_button.Text = "X"
-            close_button.Rotation = 0
-        end
-    end
+    local is_container_open = true
 
-    close_button.MouseButton1Click:Connect(function()
-        local is_container_open = container_scroll.Size == UDim2.new(1, 0, 0, 400)
-        
-        if is_container_open then 
-            game:GetService("TweenService"):Create(close_button, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-                TextColor3 = Color3.fromRGB(150, 150, 150),
-                Rotation = 180
-            }):Play()
-            update_close_button_text(true)
-            
-            container_scroll:TweenSize(
-                UDim2.new(1, 0, 0, 0), 
-                "Out", "Quad", 0.25, true
-            )
-            game:GetService("TweenService"):Create(window_background, TweenInfo.new(0.25), {
-                Size = UDim2.new(1, 0, 1, 0)
-            }):Play()
-            game:GetService("TweenService"):Create(window_shadow, TweenInfo.new(0.25), {
-                Size = UDim2.new(1, 30, 1, 30)
-            }):Play()
-        else
-            game:GetService("TweenService"):Create(close_button, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+    local function toggle_container()
+        is_container_open = not is_container_open
+        if is_container_open then
+            close_button.Text = "−"
+            game:GetService("TweenService"):Create(close_button, TweenInfo.new(0.2), {
                 TextColor3 = Color3.fromRGB(200, 200, 200),
                 Rotation = 0
             }):Play()
-            update_close_button_text(false)
-            
-            container_scroll:TweenSize(
-                UDim2.new(1, 0, 0, 400), 
-                "Out", "Quad", 0.25, true
-            )
-            game:GetService("TweenService"):Create(window_background, TweenInfo.new(0.25), {
-                Size = UDim2.new(1, 0, 1, 400)
+            container_scroll:TweenSize(UDim2.new(1, 0, 0, content_height), "Out", "Quad", 0.2, true)
+            game:GetService("TweenService"):Create(window_background, TweenInfo.new(0.2), {
+                Size = UDim2.new(1, 0, 1, content_height)
             }):Play()
-            game:GetService("TweenService"):Create(window_shadow, TweenInfo.new(0.25), {
-                Size = UDim2.new(1, 30, 1, 430)
+            game:GetService("TweenService"):Create(window_shadow, TweenInfo.new(0.2), {
+                Size = UDim2.new(1, 30, 1, content_height + 30)
+            }):Play()
+        else
+            close_button.Text = "+"
+            game:GetService("TweenService"):Create(close_button, TweenInfo.new(0.2), {
+                TextColor3 = Color3.fromRGB(150, 150, 150),
+                Rotation = 0
+            }):Play()
+            container_scroll:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Quad", 0.2, true)
+            game:GetService("TweenService"):Create(window_background, TweenInfo.new(0.2), {
+                Size = UDim2.new(1, 0, 1, 0)
+            }):Play()
+            game:GetService("TweenService"):Create(window_shadow, TweenInfo.new(0.2), {
+                Size = UDim2.new(1, 30, 1, 30)
             }):Play()
         end
-    end)
+    end
 
-    close_button.TouchTap:Connect(function()
-        close_button.MouseButton1Click:Fire()
-    end)
+    close_button.MouseButton1Click:Connect(toggle_container)
+    close_button.TouchTap:Connect(toggle_container)
 
     container_layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         container_scroll.CanvasSize = UDim2.new(0, 0, 0, container_layout.AbsoluteContentSize.Y + 10)
     end)
 
+    resize_handle.Name = "ResizeHandle"
+    resize_handle.Parent = window_frame
+    resize_handle.BackgroundTransparency = 1
+    resize_handle.Position = UDim2.new(1, -15, 1, -15)
+    resize_handle.Size = UDim2.new(0, 15, 0, 15)
+    resize_handle.Text = ""
+    resize_handle.ZIndex = 10
+
+    local resize_icon = Instance.new("ImageLabel")
+    resize_icon.Name = "ResizeIcon"
+    resize_icon.Parent = resize_handle
+    resize_icon.BackgroundTransparency = 1
+    resize_icon.Size = UDim2.new(1, 0, 1, 0)
+    resize_icon.Image = "rbxassetid://9753924245"
+    resize_icon.ImageColor3 = Color3.fromRGB(100, 100, 100)
+    resize_icon.ImageTransparency = 0.7
+
+    local resizing = false
+    local start_pos
+    local start_size
+    local min_width = is_mobile and 180 or 220
+    local min_height = is_mobile and 100 or 150
+    local max_width = 500
+    local max_height = 600
+
+    resize_handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            resizing = true
+            start_pos = input.Position
+            start_size = window_frame.Size
+            game:GetService("TweenService"):Create(resize_icon, TweenInfo.new(0.1), {
+                ImageColor3 = Color3.fromRGB(200, 200, 200)
+            }):Play()
+        end
+    end)
+
+    resize_handle.InputEnded:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and resizing then
+            resizing = false
+            game:GetService("TweenService"):Create(resize_icon, TweenInfo.new(0.1), {
+                ImageColor3 = Color3.fromRGB(100, 100, 100)
+            }):Play()
+        end
+    end)
+
+    user_input_service.InputChanged:Connect(function(input)
+        if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - start_pos
+            local new_width = math.clamp(start_size.X.Offset + delta.X, min_width, max_width)
+            local new_height = math.clamp(start_size.Y.Offset + delta.Y, min_height, max_height)
+            
+            window_frame.Size = UDim2.new(0, new_width, 0, new_height)
+            
+            if is_container_open then
+                container_scroll.Size = UDim2.new(1, 0, 0, content_height)
+                window_background.Size = UDim2.new(1, 0, 1, content_height)
+                window_shadow.Size = UDim2.new(1, 30, 1, content_height + 30)
+            end
+        end
+    end)
+
     local window_methods = {}
 
     function window_methods:button(name, callback)
+        local button_height = is_mobile and 34 or 36
+        
         local button_container = Instance.new("Frame")
         local button_corner = Instance.new("UICorner")
         local button = Instance.new("TextButton")
@@ -188,7 +243,7 @@ function library:window(title)
         button_container.Parent = container_scroll
         button_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         button_container.BorderSizePixel = 0
-        button_container.Size = UDim2.new(0.9, 0, 0, 36)
+        button_container.Size = UDim2.new(0.9, 0, 0, button_height)
         
         button_corner.CornerRadius = UDim.new(0, 6)
         button_corner.Parent = button_container
@@ -212,36 +267,53 @@ function library:window(title)
         button_name.Font = Enum.Font.Gotham
         button_name.Text = name
         button_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        button_name.TextSize = 13
+        button_name.TextSize = is_mobile and 12 or 13
         
-        button.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+        local function on_hover()
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             }):Play()
-        end)
+        end
         
-        button.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+        local function off_hover()
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
-        end)
+        end
         
-        local function trigger_callback()
-            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+        button.MouseEnter:Connect(on_hover)
+        button.MouseLeave:Connect(off_hover)
+        
+        local function on_click()
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.1), {
                 BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             }):Play()
             task.wait(0.1)
-            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(button_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
             callback()
         end
         
-        button.MouseButton1Click:Connect(trigger_callback)
-        button.TouchTap:Connect(trigger_callback)
+        button.MouseButton1Click:Connect(on_click)
+        button.TouchTap:Connect(on_click)
+        
+        button_container.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                on_hover()
+            end
+        end)
+        
+        button_container.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                off_hover()
+            end
+        end)
     end
     
     function window_methods:toggle(name, callback)
+        local toggle_height = is_mobile and 34 or 36
+        
         local toggle_container = Instance.new("Frame")
         local toggle_corner = Instance.new("UICorner")
         local toggle_name = Instance.new("TextLabel")
@@ -254,7 +326,7 @@ function library:window(title)
         toggle_container.Parent = container_scroll
         toggle_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         toggle_container.BorderSizePixel = 0
-        toggle_container.Size = UDim2.new(0.9, 0, 0, 36)
+        toggle_container.Size = UDim2.new(0.9, 0, 0, toggle_height)
         
         toggle_corner.CornerRadius = UDim.new(0, 6)
         toggle_corner.Parent = toggle_container
@@ -268,15 +340,14 @@ function library:window(title)
         toggle_name.Font = Enum.Font.Gotham
         toggle_name.Text = name
         toggle_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        toggle_name.TextSize = 13
+        toggle_name.TextSize = is_mobile and 12 or 13
         toggle_name.TextXAlignment = Enum.TextXAlignment.Left
         
         toggle_button.Name = "ToggleButton"
         toggle_button.Parent = toggle_container
         toggle_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        toggle_button.BorderColor3 = Color3.fromRGB(27, 42, 53)
         toggle_button.Position = UDim2.new(0.78, 0, 0.22, 0)
-        toggle_button.Size = UDim2.new(0, 40, 0, 20)
+        toggle_button.Size = UDim2.new(0, is_mobile and 36 or 40, 0, is_mobile and 18 or 20)
         toggle_button.AutoButtonColor = false
         toggle_button.Font = Enum.Font.SourceSans
         toggle_button.Text = ""
@@ -291,7 +362,7 @@ function library:window(title)
         toggle_indicator.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
         toggle_indicator.BorderSizePixel = 0
         toggle_indicator.Position = UDim2.new(0.05, 0, 0.1, 0)
-        toggle_indicator.Size = UDim2.new(0, 16, 0, 16)
+        toggle_indicator.Size = UDim2.new(0, is_mobile and 14 or 16, 0, is_mobile and 14 or 16)
         
         indicator_corner.CornerRadius = UDim.new(1, 0)
         indicator_corner.Parent = toggle_indicator
@@ -301,19 +372,19 @@ function library:window(title)
         local function toggle_state()
             is_toggled = not is_toggled
             if is_toggled then
-                game:GetService("TweenService"):Create(toggle_indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(toggle_indicator, TweenInfo.new(0.2), {
                     Position = UDim2.new(0.55, 0, 0.1, 0),
                     BackgroundColor3 = Color3.fromRGB(0, 180, 255)
                 }):Play()
-                game:GetService("TweenService"):Create(toggle_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(toggle_button, TweenInfo.new(0.2), {
                     BackgroundColor3 = Color3.fromRGB(0, 100, 150)
                 }):Play()
             else
-                game:GetService("TweenService"):Create(toggle_indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(toggle_indicator, TweenInfo.new(0.2), {
                     Position = UDim2.new(0.05, 0, 0.1, 0),
                     BackgroundColor3 = Color3.fromRGB(100, 100, 100)
                 }):Play()
-                game:GetService("TweenService"):Create(toggle_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(toggle_button, TweenInfo.new(0.2), {
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 }):Play()
             end
@@ -324,19 +395,37 @@ function library:window(title)
         toggle_button.TouchTap:Connect(toggle_state)
         
         toggle_container.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             }):Play()
         end)
         
         toggle_container.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
+        end)
+        
+        toggle_container.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15), {
+                    BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                }):Play()
+            end
+        end)
+        
+        toggle_container.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                game:GetService("TweenService"):Create(toggle_container, TweenInfo.new(0.15), {
+                    BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                }):Play()
+            end
         end)
     end
     
     function window_methods:slider(name, min_value, max_value, default_value, callback)
+        local slider_height = is_mobile and 44 or 48
+        
         local slider_container = Instance.new("Frame")
         local slider_corner = Instance.new("UICorner")
         local slider_name = Instance.new("TextLabel")
@@ -351,7 +440,7 @@ function library:window(title)
         slider_container.Parent = container_scroll
         slider_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         slider_container.BorderSizePixel = 0
-        slider_container.Size = UDim2.new(0.9, 0, 0, 48)
+        slider_container.Size = UDim2.new(0.9, 0, 0, slider_height)
         
         slider_corner.CornerRadius = UDim.new(0, 6)
         slider_corner.Parent = slider_container
@@ -365,7 +454,7 @@ function library:window(title)
         slider_name.Font = Enum.Font.Gotham
         slider_name.Text = name
         slider_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        slider_name.TextSize = 13
+        slider_name.TextSize = is_mobile and 12 or 13
         slider_name.TextXAlignment = Enum.TextXAlignment.Left
         
         slider_value.Name = "SliderValue"
@@ -377,7 +466,7 @@ function library:window(title)
         slider_value.Font = Enum.Font.Gotham
         slider_value.Text = tostring(default_value)
         slider_value.TextColor3 = Color3.fromRGB(180, 180, 180)
-        slider_value.TextSize = 13
+        slider_value.TextSize = is_mobile and 12 or 13
         slider_value.TextXAlignment = Enum.TextXAlignment.Right
         
         slider_track.Name = "SliderTrack"
@@ -436,14 +525,14 @@ function library:window(title)
         
         local function start_dragging(input)
             is_dragging = true
-            game:GetService("TweenService"):Create(slider_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(slider_button, TweenInfo.new(0.15), {
                 Size = UDim2.new(0, 20, 0, 20)
             }):Play()
         end
         
         local function stop_dragging()
             is_dragging = false
-            game:GetService("TweenService"):Create(slider_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(slider_button, TweenInfo.new(0.15), {
                 Size = UDim2.new(0, 16, 0, 16)
             }):Play()
         end
@@ -460,12 +549,6 @@ function library:window(title)
             end
         end)
         
-        game:GetService("UserInputService").InputChanged:Connect(function(input)
-            if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                update_slider(input)
-            end
-        end)
-        
         slider_track.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 update_slider(input)
@@ -479,20 +562,28 @@ function library:window(title)
             end
         end)
         
+        user_input_service.InputChanged:Connect(function(input)
+            if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                update_slider(input)
+            end
+        end)
+        
         slider_container.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(slider_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(slider_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             }):Play()
         end)
         
         slider_container.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(slider_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(slider_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
         end)
     end
     
     function window_methods:dropdown(name, options, callback)
+        local dropdown_height = is_mobile and 34 or 36
+        
         local dropdown_container = Instance.new("Frame")
         local dropdown_corner = Instance.new("UICorner")
         local dropdown_name = Instance.new("TextLabel")
@@ -504,7 +595,7 @@ function library:window(title)
         dropdown_container.Parent = container_scroll
         dropdown_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         dropdown_container.BorderSizePixel = 0
-        dropdown_container.Size = UDim2.new(0.9, 0, 0, 36)
+        dropdown_container.Size = UDim2.new(0.9, 0, 0, dropdown_height)
         dropdown_container.ClipsDescendants = false
         
         dropdown_corner.CornerRadius = UDim.new(0, 6)
@@ -519,15 +610,14 @@ function library:window(title)
         dropdown_name.Font = Enum.Font.Gotham
         dropdown_name.Text = name
         dropdown_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        dropdown_name.TextSize = 13
+        dropdown_name.TextSize = is_mobile and 12 or 13
         dropdown_name.TextXAlignment = Enum.TextXAlignment.Left
         
         dropdown_button.Name = "DropdownButton"
         dropdown_button.Parent = dropdown_container
         dropdown_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        dropdown_button.BackgroundTransparency = 0
         dropdown_button.Position = UDim2.new(0.7, 0, 0.22, 0)
-        dropdown_button.Size = UDim2.new(0.25, 0, 0, 20)
+        dropdown_button.Size = UDim2.new(0.25, 0, 0, is_mobile and 18 or 20)
         dropdown_button.Font = Enum.Font.SourceSans
         dropdown_button.Text = ""
         dropdown_button.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -547,7 +637,7 @@ function library:window(title)
         dropdown_selected.Font = Enum.Font.Gotham
         dropdown_selected.Text = "Select"
         dropdown_selected.TextColor3 = Color3.fromRGB(200, 200, 200)
-        dropdown_selected.TextSize = 11
+        dropdown_selected.TextSize = is_mobile and 10 or 11
         dropdown_selected.TextXAlignment = Enum.TextXAlignment.Left
         
         dropdown_arrow.Name = "DropdownArrow"
@@ -555,7 +645,7 @@ function library:window(title)
         dropdown_arrow.BackgroundTransparency = 1
         dropdown_arrow.Position = UDim2.new(0.8, 0, 0.15, 0)
         dropdown_arrow.Size = UDim2.new(0, 12, 0, 12)
-        dropdown_arrow.Image = "rbxassetid://153287192"
+        dropdown_arrow.Image = "rbxassetid://153287088"
         dropdown_arrow.ImageColor3 = Color3.fromRGB(200, 200, 200)
         dropdown_arrow.Rotation = 90
         
@@ -597,7 +687,7 @@ function library:window(title)
         dropdown_scroll.Size = UDim2.new(1, -6, 1, -6)
         dropdown_scroll.Position = UDim2.new(0, 3, 0, 3)
         dropdown_scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-        dropdown_scroll.ScrollBarThickness = 3
+        dropdown_scroll.ScrollBarThickness = is_mobile and 5 or 3
         dropdown_scroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
         dropdown_scroll.ScrollBarImageTransparency = 0.3
         dropdown_scroll.VerticalScrollBarInset = Enum.ScrollBarInset.Always
@@ -612,8 +702,8 @@ function library:window(title)
         
         local function update_list_height()
             local item_count = #options
-            local height = math.min(item_count * 28 + 6, 140)
-            dropdown_scroll.CanvasSize = UDim2.new(0, 0, 0, item_count * 28)
+            local height = math.min(item_count * (is_mobile and 26 or 28) + 6, 140)
+            dropdown_scroll.CanvasSize = UDim2.new(0, 0, 0, item_count * (is_mobile and 26 or 28))
             return height
         end
         
@@ -626,10 +716,10 @@ function library:window(title)
                     0, dropdown_button.AbsolutePosition.Y + dropdown_button.AbsoluteSize.Y + 4
                 )
                 dropdown_list.Size = UDim2.new(0, dropdown_button.AbsoluteSize.X, 0, 0)
-                game:GetService("TweenService"):Create(dropdown_arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(dropdown_arrow, TweenInfo.new(0.2), {
                     Rotation = 270
                 }):Play()
-                game:GetService("TweenService"):Create(dropdown_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(dropdown_button, TweenInfo.new(0.2), {
                     BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 }):Play()
                 dropdown_list:TweenSize(
@@ -637,10 +727,10 @@ function library:window(title)
                     "Out", "Quad", 0.2, true
                 )
             else
-                game:GetService("TweenService"):Create(dropdown_arrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(dropdown_arrow, TweenInfo.new(0.2), {
                     Rotation = 90
                 }):Play()
-                game:GetService("TweenService"):Create(dropdown_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(dropdown_button, TweenInfo.new(0.2), {
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 }):Play()
                 dropdown_list:TweenSize(
@@ -664,7 +754,7 @@ function library:window(title)
             option_button.Parent = dropdown_scroll
             option_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             option_button.BorderSizePixel = 0
-            option_button.Size = UDim2.new(1, 0, 0, 26)
+            option_button.Size = UDim2.new(1, 0, 0, is_mobile and 24 or 26)
             option_button.Font = Enum.Font.SourceSans
             option_button.Text = ""
             option_button.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -684,7 +774,7 @@ function library:window(title)
             option_text.Font = Enum.Font.Gotham
             option_text.Text = option
             option_text.TextColor3 = Color3.fromRGB(220, 220, 220)
-            option_text.TextSize = 11
+            option_text.TextSize = is_mobile and 10 or 11
             option_text.TextXAlignment = Enum.TextXAlignment.Left
             option_text.ZIndex = 24
             
@@ -699,24 +789,40 @@ function library:window(title)
             option_button.TouchTap:Connect(select_option)
             
             option_button.MouseEnter:Connect(function()
-                game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15), {
                     BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 }):Play()
             end)
             
             option_button.MouseLeave:Connect(function()
-                game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15), {
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 }):Play()
+            end)
+            
+            option_button.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.Touch then
+                    game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                    }):Play()
+                end
+            end)
+            
+            option_button.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.Touch then
+                    game:GetService("TweenService"):Create(option_button, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                    }):Play()
+                end
             end)
         end
         
         update_list_height()
         
         local connection
-        connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+        connection = user_input_service.InputBegan:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and is_open then
-                local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
+                local mouse_pos = user_input_service:GetMouseLocation()
                 local dropdown_pos = dropdown_list.AbsolutePosition
                 local dropdown_size = dropdown_list.AbsoluteSize
                 
@@ -736,19 +842,21 @@ function library:window(title)
         end)
         
         dropdown_container.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(dropdown_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(dropdown_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             }):Play()
         end)
         
         dropdown_container.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(dropdown_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(dropdown_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
         end)
     end
     
     function window_methods:colorpicker(name, default_color, callback)
+        local colorpicker_height = is_mobile and 34 or 36
+        
         local colorpicker_container = Instance.new("Frame")
         local colorpicker_corner = Instance.new("UICorner")
         local colorpicker_name = Instance.new("TextLabel")
@@ -760,7 +868,7 @@ function library:window(title)
         colorpicker_container.Parent = container_scroll
         colorpicker_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         colorpicker_container.BorderSizePixel = 0
-        colorpicker_container.Size = UDim2.new(0.9, 0, 0, 36)
+        colorpicker_container.Size = UDim2.new(0.9, 0, 0, colorpicker_height)
         
         colorpicker_corner.CornerRadius = UDim.new(0, 6)
         colorpicker_corner.Parent = colorpicker_container
@@ -774,15 +882,14 @@ function library:window(title)
         colorpicker_name.Font = Enum.Font.Gotham
         colorpicker_name.Text = name
         colorpicker_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        colorpicker_name.TextSize = 13
+        colorpicker_name.TextSize = is_mobile and 12 or 13
         colorpicker_name.TextXAlignment = Enum.TextXAlignment.Left
         
         color_button.Name = "ColorButton"
         color_button.Parent = colorpicker_container
         color_button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        color_button.BackgroundTransparency = 0
         color_button.Position = UDim2.new(0.7, 0, 0.22, 0)
-        color_button.Size = UDim2.new(0.25, 0, 0, 20)
+        color_button.Size = UDim2.new(0.25, 0, 0, is_mobile and 18 or 20)
         color_button.Font = Enum.Font.SourceSans
         color_button.Text = ""
         color_button.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -798,7 +905,7 @@ function library:window(title)
         color_preview.BackgroundColor3 = default_color or Color3.fromRGB(0, 180, 255)
         color_preview.BorderSizePixel = 0
         color_preview.Position = UDim2.new(0.1, 0, 0.1, 0)
-        color_preview.Size = UDim2.new(0.8, 0, 0, 16)
+        color_preview.Size = UDim2.new(0.8, 0, 0, is_mobile and 14 or 16)
         
         preview_corner.CornerRadius = UDim.new(0, 3)
         preview_corner.Parent = color_preview
@@ -829,7 +936,7 @@ function library:window(title)
             color_picker_frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             color_picker_frame.BorderSizePixel = 0
             color_picker_frame.Position = UDim2.new(0, 0, 0, 0)
-            color_picker_frame.Size = UDim2.new(0, 220, 0, 0)
+            color_picker_frame.Size = UDim2.new(0, is_mobile and 200 or 220, 0, 0)
             color_picker_frame.ZIndex = 30
             color_picker_frame.ClipsDescendants = true
             
@@ -1036,14 +1143,14 @@ function library:window(title)
                 
                 local function start_dragging(input)
                     is_dragging = true
-                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15), {
                         Size = UDim2.new(0, 18, 0, 18)
                     }):Play()
                 end
                 
                 local function stop_dragging()
                     is_dragging = false
-                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15), {
                         Size = UDim2.new(0, 14, 0, 14)
                     }):Play()
                 end
@@ -1073,7 +1180,7 @@ function library:window(title)
                     end
                 end)
                 
-                game:GetService("UserInputService").InputChanged:Connect(function(input)
+                user_input_service.InputChanged:Connect(function(input)
                     if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                         update_slider(input)
                     end
@@ -1087,7 +1194,7 @@ function library:window(title)
             local function apply_color()
                 callback(current_color)
                 color_preview.BackgroundColor3 = current_color
-                color_picker_frame:TweenSize(UDim2.new(0, 220, 0, 0), "Out", "Quad", 0.2, true, function()
+                color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 200 or 220, 0, 0), "Out", "Quad", 0.2, true, function()
                     color_picker_frame:Destroy()
                     color_picker_frame = nil
                 end)
@@ -1097,29 +1204,29 @@ function library:window(title)
             apply_button.TouchTap:Connect(apply_color)
             
             apply_button.MouseEnter:Connect(function()
-                game:GetService("TweenService"):Create(apply_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(apply_button, TweenInfo.new(0.15), {
                     BackgroundColor3 = Color3.fromRGB(0, 160, 235)
                 }):Play()
             end)
             
             apply_button.MouseLeave:Connect(function()
-                game:GetService("TweenService"):Create(apply_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                game:GetService("TweenService"):Create(apply_button, TweenInfo.new(0.15), {
                     BackgroundColor3 = Color3.fromRGB(0, 180, 255)
                 }):Play()
             end)
             
-            color_picker_frame:TweenSize(UDim2.new(0, 220, 0, 180), "Out", "Quad", 0.2, true)
+            color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 200 or 220, 0, 180), "Out", "Quad", 0.2, true)
             
             local close_connection
-            close_connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+            close_connection = user_input_service.InputBegan:Connect(function(input)
                 if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and color_picker_frame then
-                    local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
+                    local mouse_pos = user_input_service:GetMouseLocation()
                     local frame_pos = color_picker_frame.AbsolutePosition
                     local frame_size = color_picker_frame.AbsoluteSize
                     
                     if not (mouse_pos.X >= frame_pos.X and mouse_pos.X <= frame_pos.X + frame_size.X and
                            mouse_pos.Y >= frame_pos.Y and mouse_pos.Y <= frame_pos.Y + frame_size.Y) then
-                        color_picker_frame:TweenSize(UDim2.new(0, 220, 0, 0), "Out", "Quad", 0.2, true, function()
+                        color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 200 or 220, 0, 0), "Out", "Quad", 0.2, true, function()
                             color_picker_frame:Destroy()
                             color_picker_frame = nil
                             if close_connection then
@@ -1137,10 +1244,10 @@ function library:window(title)
             local right_space = screen_size.X - (button_pos.X + button_size.X)
             local left_space = button_pos.X
             
-            if right_space > 230 then
+            if right_space > (is_mobile and 210 or 230) then
                 color_picker_frame.Position = UDim2.new(0, button_pos.X + button_size.X + 10, 0, button_pos.Y)
-            elseif left_space > 230 then
-                color_picker_frame.Position = UDim2.new(0, button_pos.X - 230, 0, button_pos.Y)
+            elseif left_space > (is_mobile and 210 or 230) then
+                color_picker_frame.Position = UDim2.new(0, button_pos.X - (is_mobile and 210 or 230), 0, button_pos.Y)
             else
                 color_picker_frame.Position = UDim2.new(0, button_pos.X, 0, button_pos.Y + button_size.Y + 10)
             end
@@ -1150,19 +1257,21 @@ function library:window(title)
         color_button.TouchTap:Connect(show_color_picker)
         
         colorpicker_container.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(colorpicker_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(colorpicker_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             }):Play()
         end)
         
         colorpicker_container.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(colorpicker_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(colorpicker_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
         end)
     end
     
     function window_methods:textbox(name, placeholder, callback)
+        local textbox_height = is_mobile and 52 or 56
+        
         local textbox_container = Instance.new("Frame")
         local textbox_corner = Instance.new("UICorner")
         local textbox_name = Instance.new("TextLabel")
@@ -1173,7 +1282,7 @@ function library:window(title)
         textbox_container.Parent = container_scroll
         textbox_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         textbox_container.BorderSizePixel = 0
-        textbox_container.Size = UDim2.new(0.9, 0, 0, 56)
+        textbox_container.Size = UDim2.new(0.9, 0, 0, textbox_height)
         
         textbox_corner.CornerRadius = UDim.new(0, 6)
         textbox_corner.Parent = textbox_container
@@ -1187,7 +1296,7 @@ function library:window(title)
         textbox_name.Font = Enum.Font.Gotham
         textbox_name.Text = name
         textbox_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        textbox_name.TextSize = 13
+        textbox_name.TextSize = is_mobile and 12 or 13
         textbox_name.TextXAlignment = Enum.TextXAlignment.Left
         
         textbox_input.Name = "TextboxInput"
@@ -1195,12 +1304,12 @@ function library:window(title)
         textbox_input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         textbox_input.BorderSizePixel = 0
         textbox_input.Position = UDim2.new(0.05, 0, 0.45, 0)
-        textbox_input.Size = UDim2.new(0.9, 0, 0, 28)
+        textbox_input.Size = UDim2.new(0.9, 0, 0, is_mobile and 26 or 28)
         textbox_input.Font = Enum.Font.Gotham
         textbox_input.PlaceholderText = placeholder or "Enter text..."
         textbox_input.Text = ""
         textbox_input.TextColor3 = Color3.fromRGB(220, 220, 220)
-        textbox_input.TextSize = 12
+        textbox_input.TextSize = is_mobile and 11 or 12
         textbox_input.ClearTextOnFocus = false
         textbox_input.TextTruncate = Enum.TextTruncate.AtEnd
         
@@ -1213,13 +1322,13 @@ function library:window(title)
         text_padding.PaddingRight = UDim.new(0, 8)
         
         textbox_input.Focused:Connect(function()
-            game:GetService("TweenService"):Create(textbox_input, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(textbox_input, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             }):Play()
         end)
         
         textbox_input.FocusLost:Connect(function(enter_pressed)
-            game:GetService("TweenService"):Create(textbox_input, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(textbox_input, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             }):Play()
             if enter_pressed then
@@ -1228,13 +1337,13 @@ function library:window(title)
         end)
         
         textbox_container.MouseEnter:Connect(function()
-            game:GetService("TweenService"):Create(textbox_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(textbox_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             }):Play()
         end)
         
         textbox_container.MouseLeave:Connect(function()
-            game:GetService("TweenService"):Create(textbox_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            game:GetService("TweenService"):Create(textbox_container, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             }):Play()
         end)
@@ -1249,7 +1358,7 @@ function library:window(title)
         label_container.Parent = container_scroll
         label_container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         label_container.BackgroundTransparency = 0
-        label_container.Size = UDim2.new(0.9, 0, 0, 32)
+        label_container.Size = UDim2.new(0.9, 0, 0, is_mobile and 30 or 32)
         
         label_corner.CornerRadius = UDim.new(0, 6)
         label_corner.Parent = label_container
@@ -1263,7 +1372,7 @@ function library:window(title)
         label_text.Font = Enum.Font.Gotham
         label_text.Text = text
         label_text.TextColor3 = Color3.fromRGB(180, 180, 180)
-        label_text.TextSize = 12
+        label_text.TextSize = is_mobile and 11 or 12
         label_text.TextWrapped = true
     end
     
@@ -1275,7 +1384,7 @@ function library:window(title)
         separator_container.Parent = container_scroll
         separator_container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         separator_container.BackgroundTransparency = 1
-        separator_container.Size = UDim2.new(0.9, 0, 0, 10)
+        separator_container.Size = UDim2.new(0.9, 0, 0, is_mobile and 8 or 10)
         
         separator_line.Name = "SeparatorLine"
         separator_line.Parent = separator_container
@@ -1288,4 +1397,4 @@ function library:window(title)
     return window_methods
 end
 
-return library
+return Library
