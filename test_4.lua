@@ -555,7 +555,7 @@ function library:window(title)
         dropdown_arrow.BackgroundTransparency = 1
         dropdown_arrow.Position = UDim2.new(0.8, 0, 0.15, 0)
         dropdown_arrow.Size = UDim2.new(0, 12, 0, 12)
-        dropdown_arrow.Image = "rbxassetid://153287088"
+        dropdown_arrow.Image = "rbxassetid://153287192"
         dropdown_arrow.ImageColor3 = Color3.fromRGB(200, 200, 200)
         dropdown_arrow.Rotation = 90
         
