@@ -1288,4 +1288,4 @@ function library:window(title)
     return window_methods
 end
 
-return library
+return Library
