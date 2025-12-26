@@ -770,6 +770,7 @@ function Library:Window(title)
             option_button.TextSize = 14
             option_button.AutoButtonColor = false
             option_button.ZIndex = 22
+            option_button.LayoutOrder = i
             
             local option_corner = Instance.new("UICorner")
             option_corner.CornerRadius = UDim.new(0, 6)
@@ -934,8 +935,6 @@ function Library:Window(title)
             
             color_picker_frame = Instance.new("Frame")
             local frame_corner = Instance.new("UICorner")
-            local color_wheel = Instance.new("ImageLabel")
-            local wheel_selector = Instance.new("Frame")
             local color_display = Instance.new("Frame")
             local display_corner = Instance.new("UICorner")
             local hex_input = Instance.new("TextBox")
@@ -944,17 +943,18 @@ function Library:Window(title)
             local apply_corner = Instance.new("UICorner")
             
             local current_color = color_preview.BackgroundColor3
+            local r, g, b = math.floor(current_color.r * 255), math.floor(current_color.g * 255), math.floor(current_color.b * 255)
             
             color_picker_frame.Name = "ColorPickerFrame"
             color_picker_frame.Parent = ui_lib
             color_picker_frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             color_picker_frame.BorderSizePixel = 0
             color_picker_frame.Position = UDim2.new(0, 0, 0, 0)
-            color_picker_frame.Size = UDim2.new(0, is_mobile and 220 or 240, 0, 0)
+            color_picker_frame.Size = UDim2.new(0, is_mobile and 200 or 220, 0, 0)
             color_picker_frame.ZIndex = 30
             color_picker_frame.ClipsDescendants = true
             
-            frame_corner.CornerRadius = UDim.new(0, 10)
+            frame_corner.CornerRadius = UDim.new(0, 8)
             frame_corner.Parent = color_picker_frame
             
             local color_picker_shadow = Instance.new("ImageLabel")
@@ -970,60 +970,116 @@ function Library:Window(title)
             color_picker_shadow.SliceCenter = Rect.new(23, 23, 277, 277)
             color_picker_shadow.ZIndex = 29
             
-            color_wheel.Name = "ColorWheel"
-            color_wheel.Parent = color_picker_frame
-            color_wheel.BackgroundTransparency = 1
-            color_wheel.Position = UDim2.new(0.05, 0, 0.05, 0)
-            color_wheel.Size = UDim2.new(0, is_mobile and 120 or 130, 0, is_mobile and 120 or 130)
-            color_wheel.Image = "rbxassetid://11582687689"
-            color_wheel.ZIndex = 31
-            
-            wheel_selector.Name = "WheelSelector"
-            wheel_selector.Parent = color_wheel
-            wheel_selector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            wheel_selector.BorderSizePixel = 2
-            wheel_selector.BorderColor3 = Color3.fromRGB(0, 0, 0)
-            wheel_selector.Size = UDim2.new(0, 8, 0, 8)
-            wheel_selector.Position = UDim2.new(0.5, -4, 0.5, -4)
-            wheel_selector.ZIndex = 32
-            
-            local selector_corner = Instance.new("UICorner")
-            selector_corner.CornerRadius = UDim.new(1, 0)
-            selector_corner.Parent = wheel_selector
-            
             color_display.Name = "ColorDisplay"
             color_display.Parent = color_picker_frame
             color_display.BackgroundColor3 = current_color
             color_display.BorderSizePixel = 0
-            color_display.Position = UDim2.new(0.6, 0, 0.05, 0)
-            color_display.Size = UDim2.new(0, is_mobile and 60 or 70, 0, is_mobile and 60 or 70)
+            color_display.Position = UDim2.new(0.05, 0, 0.05, 0)
+            color_display.Size = UDim2.new(0.9, 0, 0, 30)
             
-            display_corner.CornerRadius = UDim.new(0, 8)
+            display_corner.CornerRadius = UDim.new(0, 6)
             display_corner.Parent = color_display
             
             hex_input.Name = "HexInput"
             hex_input.Parent = color_picker_frame
             hex_input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             hex_input.BorderSizePixel = 0
-            hex_input.Position = UDim2.new(0.05, 0, 0.7, 0)
+            hex_input.Position = UDim2.new(0.05, 0, 0.25, 0)
             hex_input.Size = UDim2.new(0.9, 0, 0, 25)
             hex_input.Font = Enum.Font.Gotham
             hex_input.PlaceholderText = "Hex Color"
-            hex_input.Text = "#" .. string.format("%02X%02X%02X", 
-                math.floor(current_color.r * 255), 
-                math.floor(current_color.g * 255), 
-                math.floor(current_color.b * 255))
+            hex_input.Text = string.format("#%02X%02X%02X", r, g, b)
             hex_input.TextColor3 = Color3.fromRGB(220, 220, 220)
             hex_input.TextSize = 12
             hex_input.ClearTextOnFocus = false
             
-            hex_corner.CornerRadius = UDim.new(0, 6)
+            hex_corner.CornerRadius = UDim.new(0, 4)
             hex_corner.Parent = hex_input
             
             local hex_padding = Instance.new("UIPadding")
             hex_padding.Parent = hex_input
             hex_padding.PaddingLeft = UDim.new(0, 8)
             hex_padding.PaddingRight = UDim.new(0, 8)
+            
+            local function create_rgb_slider(name, y_pos, value, color)
+                local container = Instance.new("Frame")
+                local name_label = Instance.new("TextLabel")
+                local track = Instance.new("Frame")
+                local fill = Instance.new("Frame")
+                local button = Instance.new("TextButton")
+                local value_label = Instance.new("TextLabel")
+                
+                container.Name = name .. "Container"
+                container.Parent = color_picker_frame
+                container.BackgroundTransparency = 1
+                container.Position = UDim2.new(0.05, 0, y_pos, 0)
+                container.Size = UDim2.new(0.9, 0, 0, 25)
+                
+                name_label.Name = name .. "Name"
+                name_label.Parent = container
+                name_label.BackgroundTransparency = 1
+                name_label.Position = UDim2.new(0, 0, 0, 0)
+                name_label.Size = UDim2.new(0.15, 0, 1, 0)
+                name_label.Font = Enum.Font.Gotham
+                name_label.Text = name
+                name_label.TextColor3 = Color3.fromRGB(200, 200, 200)
+                name_label.TextSize = 12
+                name_label.TextXAlignment = Enum.TextXAlignment.Left
+                
+                track.Name = name .. "Track"
+                track.Parent = container
+                track.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                track.BorderSizePixel = 0
+                track.Position = UDim2.new(0.2, 0, 0.5, 0)
+                track.Size = UDim2.new(0.55, 0, 0, 4)
+                
+                local track_corner = Instance.new("UICorner")
+                track_corner.CornerRadius = UDim.new(1, 0)
+                track_corner.Parent = track
+                
+                fill.Name = name .. "Fill"
+                fill.Parent = track
+                fill.BackgroundColor3 = color
+                fill.BorderSizePixel = 0
+                fill.Size = UDim2.new(value / 255, 0, 1, 0)
+                
+                local fill_corner = Instance.new("UICorner")
+                fill_corner.CornerRadius = UDim.new(1, 0)
+                fill_corner.Parent = fill
+                
+                button.Name = name .. "Button"
+                button.Parent = track
+                button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                button.BorderSizePixel = 0
+                button.Position = UDim2.new(value / 255, -6, 0, -5)
+                button.Size = UDim2.new(0, 14, 0, 14)
+                button.Font = Enum.Font.SourceSans
+                button.Text = ""
+                button.TextColor3 = Color3.fromRGB(0, 0, 0)
+                button.TextSize = 14
+                button.AutoButtonColor = false
+                
+                local button_corner = Instance.new("UICorner")
+                button_corner.CornerRadius = UDim.new(1, 0)
+                button_corner.Parent = button
+                
+                value_label.Name = name .. "Value"
+                value_label.Parent = container
+                value_label.BackgroundTransparency = 1
+                value_label.Position = UDim2.new(0.8, 0, 0, 0)
+                value_label.Size = UDim2.new(0.2, 0, 1, 0)
+                value_label.Font = Enum.Font.Gotham
+                value_label.Text = tostring(value)
+                value_label.TextColor3 = Color3.fromRGB(180, 180, 180)
+                value_label.TextSize = 12
+                value_label.TextXAlignment = Enum.TextXAlignment.Right
+                
+                return {container = container, track = track, fill = fill, button = button, value = value_label}
+            end
+            
+            local r_data = create_rgb_slider("R", 0.4, r, Color3.fromRGB(255, 50, 50))
+            local g_data = create_rgb_slider("G", 0.55, g, Color3.fromRGB(50, 255, 50))
+            local b_data = create_rgb_slider("B", 0.7, b, Color3.fromRGB(50, 50, 255))
             
             apply_button.Name = "ApplyButton"
             apply_button.Parent = color_picker_frame
@@ -1040,94 +1096,128 @@ function Library:Window(title)
             apply_corner.CornerRadius = UDim.new(0, 6)
             apply_corner.Parent = apply_button
             
-            local function update_color_from_wheel(pos)
-                local x = math.clamp((pos.X - color_wheel.AbsolutePosition.X) / color_wheel.AbsoluteSize.X, 0, 1)
-                local y = math.clamp((pos.Y - color_wheel.AbsolutePosition.Y) / color_wheel.AbsoluteSize.Y, 0, 1)
-                
-                wheel_selector.Position = UDim2.new(x, -4, y, -4)
-                
-                local r = (x - 0.5) * 2
-                local g = (y - 0.5) * 2
-                local distance = math.sqrt(r * r + g * g)
-                
-                if distance <= 1 then
-                    local angle = math.atan2(g, r)
-                    local hue = (angle + math.pi) / (2 * math.pi)
-                    local saturation = distance
-                    local value = 1
-                    
-                    local color = Color3.fromHSV(hue, saturation, value)
-                    current_color = color
-                    color_display.BackgroundColor3 = color
-                    hex_input.Text = "#" .. string.format("%02X%02X%02X", 
-                        math.floor(color.r * 255), 
-                        math.floor(color.g * 255), 
-                        math.floor(color.b * 255))
-                end
+            local function update_color()
+                current_color = Color3.fromRGB(r, g, b)
+                color_display.BackgroundColor3 = current_color
+                hex_input.Text = string.format("#%02X%02X%02X", r, g, b)
             end
             
-            local function update_color_from_hex(hex)
+            local function update_from_hex(hex)
                 hex = hex:gsub("#", "")
                 if #hex == 6 then
                     local success, color = pcall(function()
                         return Color3.fromHex(hex)
                     end)
                     if success then
-                        current_color = color
-                        color_display.BackgroundColor3 = color
+                        r = math.floor(color.r * 255)
+                        g = math.floor(color.g * 255)
+                        b = math.floor(color.b * 255)
                         
-                        local h, s, v = color:ToHSV()
-                        local angle = h * 2 * math.pi - math.pi
-                        local distance = s
+                        r_data.fill.Size = UDim2.new(r / 255, 0, 1, 0)
+                        r_data.button.Position = UDim2.new(r / 255, -6, 0, -5)
+                        r_data.value.Text = tostring(r)
                         
-                        local x = 0.5 + (math.cos(angle) * distance) / 2
-                        local y = 0.5 + (math.sin(angle) * distance) / 2
+                        g_data.fill.Size = UDim2.new(g / 255, 0, 1, 0)
+                        g_data.button.Position = UDim2.new(g / 255, -6, 0, -5)
+                        g_data.value.Text = tostring(g)
                         
-                        wheel_selector.Position = UDim2.new(x, -4, y, -4)
+                        b_data.fill.Size = UDim2.new(b / 255, 0, 1, 0)
+                        b_data.button.Position = UDim2.new(b / 255, -6, 0, -5)
+                        b_data.value.Text = tostring(b)
+                        
+                        update_color()
                     end
                 end
             end
             
-            local wheel_dragging = false
-            
-            color_wheel.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    wheel_dragging = true
-                    update_color_from_wheel(input.Position)
-                    game:GetService("TweenService"):Create(wheel_selector, TweenInfo.new(0.15), {
-                        Size = UDim2.new(0, 10, 0, 10)
-                    }):Play()
-                end
-            end)
-            
-            color_wheel.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    wheel_dragging = false
-                    game:GetService("TweenService"):Create(wheel_selector, TweenInfo.new(0.15), {
-                        Size = UDim2.new(0, 8, 0, 8)
-                    }):Play()
-                end
-            end)
-            
-            user_input_service.InputChanged:Connect(function(input)
-                if wheel_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    update_color_from_wheel(input.Position)
-                end
-            end)
-            
             hex_input.FocusLost:Connect(function(enter_pressed)
                 if enter_pressed then
-                    update_color_from_hex(hex_input.Text)
+                    update_from_hex(hex_input.Text)
                 end
             end)
             
-            local function apply_color()
-                callback(current_color)
-                color_preview.BackgroundColor3 = current_color
-                color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 220 or 240, 0, 0), "Out", "Quad", 0.2, true, function()
-                    color_picker_frame:Destroy()
-                    color_picker_frame = nil
+            local function create_slider_logic(data, is_r, is_g, is_b)
+                local is_dragging = false
+                
+                local function update_slider(input)
+                    local relative_x = (input.Position.X - data.track.AbsolutePosition.X) / data.track.AbsoluteSize.X
+                    local clamped_x = math.clamp(relative_x, 0, 1)
+                    local value = math.floor(clamped_x * 255)
+                    
+                    data.fill.Size = UDim2.new(clamped_x, 0, 1, 0)
+                    data.button.Position = UDim2.new(clamped_x, -6, 0, -5)
+                    data.value.Text = tostring(value)
+                    
+                    if is_r then r = value
+                    elseif is_g then g = value
+                    elseif is_b then b = value end
+                    
+                    update_color()
+                end
+                
+                local function start_dragging(input)
+                    is_dragging = true
+                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15), {
+                        Size = UDim2.new(0, 18, 0, 18)
+                    }):Play()
+                end
+                
+                local function stop_dragging()
+                    is_dragging = false
+                    game:GetService("TweenService"):Create(data.button, TweenInfo.new(0.15), {
+                        Size = UDim2.new(0, 14, 0, 14)
+                    }):Play()
+                end
+                
+                data.button.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        start_dragging(input)
+                    end
                 end)
+                
+                data.button.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        stop_dragging()
+                    end
+                end)
+                
+                data.track.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        update_slider(input)
+                        start_dragging(input)
+                    end
+                end)
+                
+                data.track.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        stop_dragging()
+                    end
+                end)
+                
+                user_input_service.InputChanged:Connect(function(input)
+                    if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        update_slider(input)
+                    end
+                end)
+            end
+            
+            create_slider_logic(r_data, true, false, false)
+            create_slider_logic(g_data, false, true, false)
+            create_slider_logic(b_data, false, false, true)
+            
+            local function apply_color()
+                pcall(function()
+                    callback(current_color)
+                end)
+                color_preview.BackgroundColor3 = current_color
+                if color_picker_frame then
+                    color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 200 or 220, 0, 0), "Out", "Quad", 0.2, true, function()
+                        if color_picker_frame then
+                            color_picker_frame:Destroy()
+                            color_picker_frame = nil
+                        end
+                    end)
+                end
             end
             
             apply_button.MouseButton1Click:Connect(apply_color)
@@ -1145,24 +1235,7 @@ function Library:Window(title)
                 }):Play()
             end)
             
-            local button_pos = color_button.AbsolutePosition
-            local button_size = color_button.AbsoluteSize
-            local screen_size = game:GetService("Workspace").CurrentCamera.ViewportSize
-            
-            color_picker_frame.Position = UDim2.new(0, button_pos.X, 0, button_pos.Y + button_size.Y + 10)
-            
-            local frame_width = is_mobile and 220 or 240
-            local frame_height = 200
-            
-            if button_pos.X + frame_width > screen_size.X then
-                color_picker_frame.Position = UDim2.new(0, screen_size.X - frame_width - 10, 0, button_pos.Y + button_size.Y + 10)
-            end
-            
-            if button_pos.Y + button_size.Y + 10 + frame_height > screen_size.Y then
-                color_picker_frame.Position = UDim2.new(0, button_pos.X, 0, button_pos.Y - frame_height - 10)
-            end
-            
-            color_picker_frame:TweenSize(UDim2.new(0, frame_width, 0, frame_height), "Out", "Quad", 0.2, true)
+            color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 200 or 220, 0, 180), "Out", "Quad", 0.2, true)
             
             local close_connection
             close_connection = user_input_service.InputBegan:Connect(function(input)
@@ -1173,16 +1246,30 @@ function Library:Window(title)
                     
                     if not (mouse_pos.X >= frame_pos.X and mouse_pos.X <= frame_pos.X + frame_size.X and
                            mouse_pos.Y >= frame_pos.Y and mouse_pos.Y <= frame_pos.Y + frame_size.Y) then
-                        color_picker_frame:TweenSize(UDim2.new(0, frame_width, 0, 0), "Out", "Quad", 0.2, true, function()
-                            color_picker_frame:Destroy()
-                            color_picker_frame = nil
-                            if close_connection then
-                                close_connection:Disconnect()
+                        color_picker_frame:TweenSize(UDim2.new(0, is_mobile and 200 or 220, 0, 0), "Out", "Quad", 0.2, true, function()
+                            if color_picker_frame then
+                                color_picker_frame:Destroy()
+                                color_picker_frame = nil
                             end
                         end)
                     end
                 end
             end)
+            
+            local button_pos = color_button.AbsolutePosition
+            local button_size = color_button.AbsoluteSize
+            local screen_size = game:GetService("Workspace").CurrentCamera.ViewportSize
+            
+            local right_space = screen_size.X - (button_pos.X + button_size.X)
+            local left_space = button_pos.X
+            
+            if right_space > (is_mobile and 210 or 230) then
+                color_picker_frame.Position = UDim2.new(0, button_pos.X + button_size.X + 10, 0, button_pos.Y)
+            elseif left_space > (is_mobile and 210 or 230) then
+                color_picker_frame.Position = UDim2.new(0, button_pos.X - (is_mobile and 210 or 230), 0, button_pos.Y)
+            else
+                color_picker_frame.Position = UDim2.new(0, button_pos.X, 0, button_pos.Y + button_size.Y + 10)
+            end
         end
         
         color_button.MouseButton1Click:Connect(show_color_picker)
