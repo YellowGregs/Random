@@ -1,5 +1,3 @@
--- this is pretty gay
-
 local AF_UI = {}
 AF_UI.__index = AF_UI
 
@@ -185,26 +183,28 @@ function AF_UI:Window(options)
     end
     
     if TopBar then
-    TopBar.InputBegan:Connect(function(input)
-        if not TopBar or not TopBar:IsDescendantOf(game) then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    TopBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
+        TopBar.InputBegan:Connect(function(input)
+            if not TopBar or not TopBar:IsDescendantOf(game) then return end
+
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = MainFrame.Position
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+        
+        TopBar.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
+    end
     
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
@@ -213,7 +213,7 @@ function AF_UI:Window(options)
     end)
     
     CloseButton.MouseButton1Click:Connect(function()
-        self:Toggle()
+        Window:Toggle()
     end)
     
     CloseButton.MouseEnter:Connect(function()
@@ -991,18 +991,19 @@ function AF_UI:Notify(options)
         Notification:Destroy()
     end)
     
-   if Notification then
-    Notification.InputBegan:Connect(function(input)
-        if not Notification or not Notification:IsDescendantOf(game) then return end
+    if Notification then
+        Notification.InputBegan:Connect(function(input)
+            if not Notification or not Notification:IsDescendantOf(game) then return end
 
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            Tween(Notification, {Position = UDim2.new(1, 320, 1, -100)})
-            task.wait(0.3)
-            if Notification then
-                Notification:Destroy()
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Tween(Notification, {Position = UDim2.new(1, 320, 1, -100)})
+                task.wait(0.3)
+                if Notification then
+                    Notification:Destroy()
+                end
             end
-        end
-    end)
+        end)
+    end
 end
 
 function AF_UI:Keybind(options)
