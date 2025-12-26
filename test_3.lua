@@ -496,7 +496,7 @@ function Library:Window(title)
 		DropdownArrow.BackgroundTransparency = 1
 		DropdownArrow.Position = UDim2.new(0.8, 0, 0.15, 0)
 		DropdownArrow.Size = UDim2.new(0, 12, 0, 12)
-		DropdownArrow.Image = "rbxassetid://4726772334"
+		DropdownArrow.Image = "rbxassetid://153287088"
 		DropdownArrow.ImageColor3 = Color3.fromRGB(200, 200, 200)
 		DropdownArrow.Rotation = 90
 		
