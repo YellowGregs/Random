@@ -392,14 +392,23 @@ function Nebula:Window(options)
 		end
 	end
 	
+	-- function window:AddElement(element, tab)
+	-- 	local targetTab = tab or window.ActiveTab
+	-- 	if targetTab and targetTab.Content then
+	-- 		element.Parent = targetTab.Content
+	-- 		element.LayoutOrder = #targetTab.Content:GetChildren()
+	-- 		table.insert(window.Elements, element)
+	-- 	end
+	-- 	return element
+	-- end
+
 	function window:AddElement(element, tab)
 		local targetTab = tab or window.ActiveTab
 		if targetTab and targetTab.Content then
 			element.Parent = targetTab.Content
-			element.LayoutOrder = #targetTab.Content:GetChildren()
 			table.insert(window.Elements, element)
 		end
-		return element
+			return element
 	end
 	
 	table.insert(self.Windows, window)
