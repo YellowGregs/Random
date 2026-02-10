@@ -310,20 +310,40 @@ function Library:Window(title)
         
         button_container.Name = "ButtonContainer"
         button_container.Parent = container_scroll
-        button_container.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+        button_container.BackgroundColor3 = Color3.fromRGB(55, 125, 205)
         button_container.BorderSizePixel = 0
         button_container.Size = UDim2.new(0.9, 0, 0, button_height)
         
         button_corner.CornerRadius = UDim.new(0, 8)
         button_corner.Parent = button_container
         
+        local button_stroke = Instance.new("UIStroke")
+        button_stroke.Parent = button_container
+        button_stroke.Color = Color3.fromRGB(70, 145, 230)
+        button_stroke.Thickness = 1.5
+        button_stroke.Transparency = 0.3
+        
         local button_gradient = Instance.new("UIGradient")
         button_gradient.Parent = button_container
         button_gradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 140, 220)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 110, 190))
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(75, 150, 235)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(45, 115, 195))
         })
         button_gradient.Rotation = 90
+        
+        local button_shadow = Instance.new("Frame")
+        button_shadow.Name = "ButtonShadow"
+        button_shadow.Parent = button_container
+        button_shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        button_shadow.BackgroundTransparency = 0.7
+        button_shadow.BorderSizePixel = 0
+        button_shadow.Position = UDim2.new(0, 0, 1, -3)
+        button_shadow.Size = UDim2.new(1, 0, 0, 3)
+        button_shadow.ZIndex = 0
+        
+        local shadow_corner = Instance.new("UICorner")
+        shadow_corner.CornerRadius = UDim.new(0, 8)
+        shadow_corner.Parent = button_shadow
         
         button.Name = "Button"
         button.Parent = button_container
@@ -348,13 +368,19 @@ function Library:Window(title)
         
         local function on_hover()
             tween_service:Create(button_container, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(60, 130, 210)
+                BackgroundColor3 = Color3.fromRGB(65, 135, 215)
+            }):Play()
+            tween_service:Create(button_stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                Transparency = 0.1
             }):Play()
         end
         
         local function off_hover()
             tween_service:Create(button_container, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+                BackgroundColor3 = Color3.fromRGB(55, 125, 205)
+            }):Play()
+            tween_service:Create(button_stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                Transparency = 0.3
             }):Play()
         end
         
@@ -362,12 +388,20 @@ function Library:Window(title)
         button.MouseLeave:Connect(off_hover)
         
         local function on_click()
-            tween_service:Create(button_container, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(35, 100, 180)
+            tween_service:Create(button_container, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(40, 105, 180),
+                Size = UDim2.new(0.88, 0, 0, button_height - 2)
             }):Play()
-            task.wait(0.1)
-            tween_service:Create(button_container, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+            tween_service:Create(button_shadow, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(1, 0, 0, 1)
+            }):Play()
+            task.wait(0.08)
+            tween_service:Create(button_container, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Color3.fromRGB(55, 125, 205),
+                Size = UDim2.new(0.9, 0, 0, button_height)
+            }):Play()
+            tween_service:Create(button_shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(1, 0, 0, 3)
             }):Play()
             pcall(callback)
         end
@@ -1525,12 +1559,12 @@ function Library:Window(title)
         
         textbox_input.Focused:Connect(function()
             tween_service:Create(textbox_input, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                BackgroundColor3 = Color3.fromRGB(50, 50, 58)
             }):Play()
             tween_service:Create(input_stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                Color = Color3.fromRGB(80, 80, 90),
-                Thickness = 1.5,
-                Transparency = 0.4
+                Color = Color3.fromRGB(70, 70, 80),
+                Thickness = 1,
+                Transparency = 0.5
             }):Play()
         end)
         
