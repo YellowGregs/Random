@@ -310,12 +310,20 @@ function Library:Window(title)
         
         button_container.Name = "ButtonContainer"
         button_container.Parent = container_scroll
-        button_container.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        button_container.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
         button_container.BorderSizePixel = 0
         button_container.Size = UDim2.new(0.9, 0, 0, button_height)
         
         button_corner.CornerRadius = UDim.new(0, 8)
         button_corner.Parent = button_container
+        
+        local button_gradient = Instance.new("UIGradient")
+        button_gradient.Parent = button_container
+        button_gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 140, 220)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 110, 190))
+        })
+        button_gradient.Rotation = 90
         
         button.Name = "Button"
         button.Parent = button_container
@@ -333,20 +341,20 @@ function Library:Window(title)
         button_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         button_name.BackgroundTransparency = 1
         button_name.Size = UDim2.new(1, 0, 1, 0)
-        button_name.Font = Enum.Font.Gotham
+        button_name.Font = Enum.Font.GothamBold
         button_name.Text = name
-        button_name.TextColor3 = Color3.fromRGB(220, 220, 220)
-        button_name.TextSize = is_mobile and 12 or 13
+        button_name.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button_name.TextSize = is_mobile and 13 or 14
         
         local function on_hover()
             tween_service:Create(button_container, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+                BackgroundColor3 = Color3.fromRGB(60, 130, 210)
             }):Play()
         end
         
         local function off_hover()
             tween_service:Create(button_container, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+                BackgroundColor3 = Color3.fromRGB(50, 120, 200)
             }):Play()
         end
         
@@ -355,11 +363,11 @@ function Library:Window(title)
         
         local function on_click()
             tween_service:Create(button_container, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(0, 160, 240)
+                BackgroundColor3 = Color3.fromRGB(35, 100, 180)
             }):Play()
             task.wait(0.1)
             tween_service:Create(button_container, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+                BackgroundColor3 = Color3.fromRGB(50, 120, 200)
             }):Play()
             pcall(callback)
         end
@@ -543,26 +551,39 @@ function Library:Window(title)
         slider_track.BackgroundColor3 = Color3.fromRGB(50, 50, 58)
         slider_track.BorderSizePixel = 0
         slider_track.Position = UDim2.new(0.05, 0, 0.6, 0)
-        slider_track.Size = UDim2.new(0.9, 0, 0, 5)
+        slider_track.Size = UDim2.new(0.9, 0, 0, 6)
         
         track_corner.CornerRadius = UDim.new(1, 0)
         track_corner.Parent = slider_track
         
+        local track_stroke = Instance.new("UIStroke")
+        track_stroke.Parent = slider_track
+        track_stroke.Color = Color3.fromRGB(40, 40, 48)
+        track_stroke.Thickness = 1
+        track_stroke.Transparency = 0.5
+        
         slider_fill.Name = "SliderFill"
         slider_fill.Parent = slider_track
-        slider_fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        slider_fill.BackgroundColor3 = Color3.fromRGB(60, 140, 220)
         slider_fill.BorderSizePixel = 0
         slider_fill.Size = UDim2.new((default_value - min_value) / (max_value - min_value), 0, 1, 0)
         
         fill_corner.CornerRadius = UDim.new(1, 0)
         fill_corner.Parent = slider_fill
         
+        local fill_gradient = Instance.new("UIGradient")
+        fill_gradient.Parent = slider_fill
+        fill_gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 160, 240)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 120, 200))
+        })
+        
         slider_button.Name = "SliderButton"
         slider_button.Parent = slider_track
-        slider_button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        slider_button.BackgroundColor3 = Color3.fromRGB(245, 245, 250)
         slider_button.BorderSizePixel = 0
-        slider_button.Position = UDim2.new((default_value - min_value) / (max_value - min_value), -9, 0.5, -9)
-        slider_button.Size = UDim2.new(0, 18, 0, 18)
+        slider_button.Position = UDim2.new((default_value - min_value) / (max_value - min_value), -10, 0.5, -10)
+        slider_button.Size = UDim2.new(0, 20, 0, 20)
         slider_button.Font = Enum.Font.SourceSans
         slider_button.Text = ""
         slider_button.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -576,9 +597,9 @@ function Library:Window(title)
         local button_shadow = Instance.new("UIStroke")
         button_shadow.Name = "ButtonShadow"
         button_shadow.Parent = slider_button
-        button_shadow.Color = Color3.fromRGB(0, 170, 255)
+        button_shadow.Color = Color3.fromRGB(60, 140, 220)
         button_shadow.Thickness = 0
-        button_shadow.Transparency = 0.5
+        button_shadow.Transparency = 0.3
         
         local is_dragging = false
         local current_value = default_value
@@ -590,7 +611,7 @@ function Library:Window(title)
             local value = math.floor(min_value + (clamped_x * (max_value - min_value)))
             
             slider_fill.Size = UDim2.new(pos.X.Scale, 0, 1, 0)
-            slider_button.Position = UDim2.new(pos.X.Scale, -9, 0.5, -9)
+            slider_button.Position = UDim2.new(pos.X.Scale, -10, 0.5, -10)
             slider_value.Text = tostring(value)
             
             if value ~= current_value then
@@ -601,20 +622,22 @@ function Library:Window(title)
         
         local function start_dragging(input)
             is_dragging = true
-            tween_service:Create(slider_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(0, 22, 0, 22)
+            tween_service:Create(slider_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, 24, 0, 24),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             }):Play()
-            tween_service:Create(button_shadow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                Thickness = 3
+            tween_service:Create(button_shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Thickness = 2.5
             }):Play()
         end
         
         local function stop_dragging()
             is_dragging = false
-            tween_service:Create(slider_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(0, 18, 0, 18)
+            tween_service:Create(slider_button, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, 20, 0, 20),
+                BackgroundColor3 = Color3.fromRGB(245, 245, 250)
             }):Play()
-            tween_service:Create(button_shadow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            tween_service:Create(button_shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                 Thickness = 0
             }):Play()
         end
@@ -726,10 +749,10 @@ function Library:Window(title)
         dropdown_icon.BackgroundTransparency = 1
         dropdown_icon.Position = UDim2.new(1, -18, 0, 0)
         dropdown_icon.Size = UDim2.new(0, 18, 1, 0)
-        dropdown_icon.Font = Enum.Font.GothamBold
-        dropdown_icon.Text = "?"
+        dropdown_icon.Font = Enum.Font.Code
+        dropdown_icon.Text = "v"
         dropdown_icon.TextColor3 = Color3.fromRGB(180, 180, 190)
-        dropdown_icon.TextSize = is_mobile and 8 or 9
+        dropdown_icon.TextSize = is_mobile and 10 or 11
         
         local dropdown_modal = Instance.new("Frame")
         local modal_corner = Instance.new("UICorner")
@@ -1290,9 +1313,10 @@ function Library:Window(title)
                 color_display.BackgroundColor3 = new_color
                 color_preview.BackgroundColor3 = new_color
                 hex_input.Text = ColorUtilities:RGBToHex(new_color)
-                wheel_canvas.BackgroundColor3 = ColorUtilities:HSVtoRGB(h, 1, 1)
-                
-                pcall(callback, new_color)
+            end
+            
+            local function apply_color()
+                pcall(callback, color_preview.BackgroundColor3)
             end
             
             local dragging_wheel = false
@@ -1306,15 +1330,19 @@ function Library:Window(title)
                 local distance = math.sqrt(delta_x * delta_x + delta_y * delta_y)
                 local max_distance = wheel_canvas.AbsoluteSize.X / 2
                 
-                local saturation = math.clamp(distance / max_distance, 0, 1)
+                if distance > max_distance then
+                    distance = max_distance
+                end
+                
+                local saturation = distance / max_distance
                 local angle = math.atan2(delta_y, delta_x)
                 local hue = (angle / (2 * math.pi) + 0.5) % 1
                 
                 current_h = hue
                 current_s = saturation
                 
-                local pos_x = center_x + math.cos(angle) * math.min(distance, max_distance) - wheel_selector.AbsoluteSize.X / 2
-                local pos_y = center_y + math.sin(angle) * math.min(distance, max_distance) - wheel_selector.AbsoluteSize.Y / 2
+                local pos_x = center_x + math.cos(angle) * distance - wheel_selector.AbsoluteSize.X / 2
+                local pos_y = center_y + math.sin(angle) * distance - wheel_selector.AbsoluteSize.Y / 2
                 
                 wheel_selector.Position = UDim2.new(0, pos_x - wheel_container.AbsolutePosition.X, 0, pos_y - wheel_container.AbsolutePosition.Y)
                 update_color_from_wheel(current_h, current_s, current_v)
@@ -1370,6 +1398,7 @@ function Library:Window(title)
                 end
             end)
             close_picker.MouseButton1Click:Connect(function()
+                apply_color()
                 color_picker_frame:Destroy()
                 color_picker_frame = nil
             end)
@@ -1499,9 +1528,9 @@ function Library:Window(title)
                 BackgroundColor3 = Color3.fromRGB(50, 50, 60)
             }):Play()
             tween_service:Create(input_stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                Color = Color3.fromRGB(0, 170, 255),
-                Thickness = 2,
-                Transparency = 0.3
+                Color = Color3.fromRGB(80, 80, 90),
+                Thickness = 1.5,
+                Transparency = 0.4
             }):Play()
         end)
         
