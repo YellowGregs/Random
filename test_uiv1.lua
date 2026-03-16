@@ -1,1068 +1,641 @@
-local UILibrary = {}
-UILibrary.__index = UILibrary
+local UIS = game:GetService("UserInputService")
 
-local THEME = {
-    -- Window
-    window_bg        = Color3.fromRGB(26, 26, 26),
-    titlebar_bg      = Color3.fromRGB(20, 20, 20),
-    titlebar_border  = Color3.fromRGB(42, 42, 42),
-
-    -- Tabs
-    tab_bg           = Color3.fromRGB(22, 22, 22),
-    tab_active_bg    = Color3.fromRGB(26, 26, 26),
-    tab_text         = Color3.fromRGB(102, 102, 102),
-    tab_active_text  = Color3.fromRGB(204, 204, 204),
-    tab_border       = Color3.fromRGB(34, 34, 34),
-    tab_accent       = Color3.fromRGB(124, 106, 247),
-
-    -- Content rows
-    row_bg           = Color3.fromRGB(32, 32, 32),
-    row_border       = Color3.fromRGB(38, 38, 38),
-    row_text         = Color3.fromRGB(187, 187, 187),
-    row_hover_bg     = Color3.fromRGB(38, 38, 38),
-
-    -- Section labels
-    label_text       = Color3.fromRGB(124, 106, 247),
-    label_border     = Color3.fromRGB(42, 42, 42),
-
-    -- Toggle
-    tog_off_bg       = Color3.fromRGB(51, 51, 51),
-    tog_off_thumb    = Color3.fromRGB(136, 136, 136),
-    tog_on_bg        = Color3.fromRGB(124, 106, 247),
-    tog_on_thumb     = Color3.fromRGB(255, 255, 255),
-    tog_border       = Color3.fromRGB(68, 68, 68),
-
-    -- Slider
-    slider_track     = Color3.fromRGB(51, 51, 51),
-    slider_fill      = Color3.fromRGB(124, 106, 247),
-    slider_thumb     = Color3.fromRGB(124, 106, 247),
-    slider_val_text  = Color3.fromRGB(124, 106, 247),
-
-    -- Dropdown
-    dropdown_arrow   = Color3.fromRGB(102, 102, 102),
-    dropdown_val     = Color3.fromRGB(136, 136, 136),
-    dropdown_menu_bg = Color3.fromRGB(37, 37, 37),
-    dropdown_item    = Color3.fromRGB(170, 170, 170),
-    dropdown_sel     = Color3.fromRGB(124, 106, 247),
-
-    -- Button
-    btn_bg           = Color3.fromRGB(42, 42, 42),
-    btn_hover_bg     = Color3.fromRGB(51, 51, 51),
-    btn_border       = Color3.fromRGB(58, 58, 58),
-    btn_text         = Color3.fromRGB(192, 192, 192),
-
-    -- Colorpicker
-    picker_border    = Color3.fromRGB(68, 68, 68),
-
-    -- Keybind badge
-    badge_bg         = Color3.fromRGB(34, 34, 34),
-    badge_border     = Color3.fromRGB(51, 51, 51),
-    badge_text       = Color3.fromRGB(85, 85, 85),
-
-    -- Misc
-    separator        = Color3.fromRGB(37, 37, 37),
-    muted_text       = Color3.fromRGB(85, 85, 85),
-    hint_text        = Color3.fromRGB(102, 102, 102),
+local T = {
+    win_bg         = Color3.fromRGB(26,  26,  26 ),
+    bar_bg         = Color3.fromRGB(20,  20,  20 ),
+    bar_border     = Color3.fromRGB(45,  45,  45 ),
+    tab_bg         = Color3.fromRGB(22,  22,  22 ),
+    tab_active_bg  = Color3.fromRGB(26,  26,  26 ),
+    tab_txt        = Color3.fromRGB(100, 100, 100),
+    tab_active_txt = Color3.fromRGB(210, 210, 210),
+    tab_border     = Color3.fromRGB(38,  38,  38 ),
+    accent         = Color3.fromRGB(124, 106, 247),
+    row_bg         = Color3.fromRGB(30,  30,  30 ),
+    row_border     = Color3.fromRGB(40,  40,  40 ),
+    row_txt        = Color3.fromRGB(185, 185, 185),
+    lbl_txt        = Color3.fromRGB(124, 106, 247),
+    lbl_bg         = Color3.fromRGB(23,  23,  23 ),
+    tog_off        = Color3.fromRGB(55,  55,  55 ),
+    tog_on         = Color3.fromRGB(124, 106, 247),
+    tog_off_thumb  = Color3.fromRGB(130, 130, 130),
+    tog_on_thumb   = Color3.fromRGB(255, 255, 255),
+    tog_border     = Color3.fromRGB(70,  70,  70 ),
+    sl_track       = Color3.fromRGB(50,  50,  50 ),
+    sl_fill        = Color3.fromRGB(124, 106, 247),
+    sl_val         = Color3.fromRGB(124, 106, 247),
+    dd_val         = Color3.fromRGB(130, 130, 130),
+    dd_arrow       = Color3.fromRGB(100, 100, 100),
+    dd_menu_bg     = Color3.fromRGB(36,  36,  36 ),
+    dd_item        = Color3.fromRGB(165, 165, 165),
+    dd_sel         = Color3.fromRGB(124, 106, 247),
+    btn_bg         = Color3.fromRGB(40,  40,  40 ),
+    btn_hover      = Color3.fromRGB(55,  55,  55 ),
+    btn_border     = Color3.fromRGB(62,  62,  62 ),
+    btn_txt        = Color3.fromRGB(195, 195, 195),
+    sw_border      = Color3.fromRGB(70,  70,  70 ),
+    hint           = Color3.fromRGB(100, 100, 100),
+    badge_bg       = Color3.fromRGB(32,  32,  32 ),
+    badge_border   = Color3.fromRGB(55,  55,  55 ),
+    badge_txt      = Color3.fromRGB(85,  85,  85 ),
+    outline        = Color3.fromRGB(50,  50,  50 ),
 }
 
-local LAYOUT = {
-    window_w     = 460,
-    titlebar_h   = 34,
-    tab_bar_h    = 30,
-    row_h        = 44,
-    row_pad_x    = 14,
-    tab_w        = 72,
-    corner       = 6,
-    tog_w        = 36,
-    tog_h        = 20,
-    tog_thumb_r  = 7,
-    slider_h     = 4,
-    slider_thumb = 8,
-    font_size_title  = 11,
-    font_size_tab    = 11,
-    font_size_row    = 12,
-    font_size_val    = 11,
-    font_size_label  = 10,
-    max_visible_rows = 8,
-    row_scroll_h     = 44,
+local L = {
+    W         = 400,
+    title_h   = 32,
+    tab_h     = 28,
+    row_h     = 40,
+    lbl_h     = 26,
+    pad       = 12,
+    tog_w     = 34,
+    tog_h     = 18,
+    tog_r     = 7,
+    sl_h      = 4,
+    sl_r      = 7,
+    btn_h     = 24,
+    btn_w     = 88,
+    sw_w      = 24,
+    sw_h      = 18,
+    fs_title  = 11,
+    fs_tab    = 11,
+    fs_row    = 12,
+    fs_val    = 11,
+    fs_lbl    = 10,
+    fs_hint   = 10,
+    max_rows  = 9,
 }
 
-local function newDraw(class, props)
-    local obj = Drawing.new(class)
+local function D(class, props)
+    local ok, obj = pcall(Drawing.new, class)
+    if not ok then return {} end
     for k, v in pairs(props) do
-        obj[k] = v
+        pcall(function() obj[k] = v end)
     end
     return obj
 end
 
-local function colorToHex(c)
+local function hexStr(c)
     return string.format("#%02x%02x%02x",
-        math.round(c.R * 255),
-        math.round(c.G * 255),
-        math.round(c.B * 255))
+        math.clamp(math.round(c.R*255),0,255),
+        math.clamp(math.round(c.G*255),0,255),
+        math.clamp(math.round(c.B*255),0,255))
 end
 
-function UILibrary:Window(title, keybind)
+local function mv2(obj, field, dx, dy)
+    pcall(function()
+        local p = obj[field]
+        obj[field] = Vector2.new(p.X+dx, p.Y+dy)
+    end)
+end
+local function mln(obj, dx, dy)
+    pcall(function()
+        obj.From = Vector2.new(obj.From.X+dx, obj.From.Y+dy)
+        obj.To   = Vector2.new(obj.To.X+dx,   obj.To.Y+dy)
+    end)
+end
+
+local Lib = {}
+Lib.__index = Lib
+
+function Lib:Window(title, keybind)
+    local W_ = L.W
+    local body_h = L.row_h * L.max_rows
+
     local win = {
-        title    = title or "UI Library",
-        keybind  = keybind or "P",
-        visible  = true,
-        tabs     = {},
+        title      = title,
+        keybind    = keybind or "RightBracket",
+        visible    = true,
+        tabs       = {},
         active_tab = nil,
-        drawings = {},
-        x        = 100,
-        y        = 80,
-        dragging = false,
-        drag_ox  = 0,
-        drag_oy  = 0,
-        connections = {},
+        x          = 60,
+        y          = 60,
+        _body_y    = 60 + L.title_h + L.tab_h,
+        _body_h    = body_h,
+        _dragging  = false,
+        _dx        = 0,
+        _dy        = 0,
+        _conns     = {},
+        _d         = {},
     }
-    setmetatable(win, {__index = UILibrary})
 
-    local W = LAYOUT.window_w
+    local function wy() return win.y end
+    local total_h = L.title_h + L.tab_h + body_h
 
-    win.d_titlebar = newDraw("Square", {
-        Position  = Vector2.new(win.x, win.y),
-        Size      = Vector2.new(W, LAYOUT.titlebar_h),
-        Color     = THEME.titlebar_bg,
-        Filled    = true,
-        Visible   = true,
-        ZIndex    = 10,
-    })
+    -- Window background + outline
+    win._d.win_bg   = D("Square",{Position=Vector2.new(win.x,win.y),Size=Vector2.new(W_,total_h),Color=T.win_bg,Filled=true,Visible=true,ZIndex=1})
+    win._d.outline  = D("Square",{Position=Vector2.new(win.x,win.y),Size=Vector2.new(W_,total_h),Color=T.outline,Filled=false,Thickness=1,Visible=true,ZIndex=25})
 
-    -- Titlebar bottom border
-    win.d_titlebar_border = newDraw("Line", {
-        From      = Vector2.new(win.x, win.y + LAYOUT.titlebar_h),
-        To        = Vector2.new(win.x + W, win.y + LAYOUT.titlebar_h),
-        Color     = THEME.titlebar_border,
-        Thickness = 1,
-        Visible   = true,
-        ZIndex    = 11,
-    })
+    -- Titlebar
+    win._d.title_bg  = D("Square",{Position=Vector2.new(win.x,win.y),Size=Vector2.new(W_,L.title_h),Color=T.bar_bg,Filled=true,Visible=true,ZIndex=2})
+    win._d.title_bdr = D("Line",  {From=Vector2.new(win.x,win.y+L.title_h),To=Vector2.new(win.x+W_,win.y+L.title_h),Color=T.bar_border,Thickness=1,Visible=true,ZIndex=3})
+    win._d.title_txt = D("Text",  {Text=title,Position=Vector2.new(win.x+L.pad, win.y+L.title_h/2 - L.fs_title/2),Size=L.fs_title,Color=T.tab_txt,Visible=true,ZIndex=4})
 
-    -- Title text
-    win.d_title = newDraw("Text", {
-        Text      = title,
-        Position  = Vector2.new(win.x + 12, win.y + LAYOUT.titlebar_h / 2 - 6),
-        Size      = LAYOUT.font_size_title,
-        Color     = THEME.tab_text,
-        Visible   = true,
-        ZIndex    = 12,
-    })
+    -- Keybind badge (top-right)
+    local bx = win.x + W_ - 26
+    local by = win.y + 7
+    win._d.badge_bg  = D("Square",{Position=Vector2.new(bx,by),Size=Vector2.new(18,18),Color=T.badge_bg,Filled=true,Visible=true,ZIndex=3})
+    win._d.badge_bdr = D("Square",{Position=Vector2.new(bx,by),Size=Vector2.new(18,18),Color=T.badge_border,Filled=false,Thickness=1,Visible=true,ZIndex=4})
+    win._d.badge_txt = D("Text",  {Text=(keybind or "P"):sub(1,1):upper(),Position=Vector2.new(bx+9,by+4),Size=9,Color=T.badge_txt,Centered=true,Visible=true,ZIndex=5})
 
-    -- Keybind badge background
-    win.d_badge_bg = newDraw("Square", {
-        Position  = Vector2.new(win.x + W - 28, win.y + 8),
-        Size      = Vector2.new(18, 18),
-        Color     = THEME.badge_bg,
-        Filled    = true,
-        Visible   = true,
-        ZIndex    = 11,
-    })
-    win.d_badge_border = newDraw("Square", {
-        Position  = Vector2.new(win.x + W - 28, win.y + 8),
-        Size      = Vector2.new(18, 18),
-        Color     = THEME.badge_border,
-        Filled    = false,
-        Thickness = 1,
-        Visible   = true,
-        ZIndex    = 12,
-    })
-    win.d_badge_text = newDraw("Text", {
-        Text      = keybind or "P",
-        Position  = Vector2.new(win.x + W - 22, win.y + 11),
-        Size      = 10,
-        Color     = THEME.badge_text,
-        Visible   = true,
-        ZIndex    = 13,
-        Centered  = true,
-    })
+    -- Tab bar
+    local tby = win.y + L.title_h
+    win._d.tab_bg  = D("Square",{Position=Vector2.new(win.x,tby),Size=Vector2.new(W_,L.tab_h),Color=T.tab_bg,Filled=true,Visible=true,ZIndex=2})
+    win._d.tab_bdr = D("Line",  {From=Vector2.new(win.x,tby+L.tab_h),To=Vector2.new(win.x+W_,tby+L.tab_h),Color=T.tab_border,Thickness=1,Visible=true,ZIndex=3})
 
-    -- Tab bar background
-    win.d_tabbar = newDraw("Square", {
-        Position  = Vector2.new(win.x, win.y + LAYOUT.titlebar_h),
-        Size      = Vector2.new(W, LAYOUT.tab_bar_h),
-        Color     = THEME.tab_bg,
-        Filled    = true,
-        Visible   = true,
-        ZIndex    = 10,
-    })
-    win.d_tabbar_border = newDraw("Line", {
-        From      = Vector2.new(win.x, win.y + LAYOUT.titlebar_h + LAYOUT.tab_bar_h),
-        To        = Vector2.new(win.x + W, win.y + LAYOUT.titlebar_h + LAYOUT.tab_bar_h),
-        Color     = THEME.tab_border,
-        Thickness = 1,
-        Visible   = true,
-        ZIndex    = 11,
-    })
+    -- Body background
+    win._d.body_bg = D("Square",{Position=Vector2.new(win.x,win._body_y),Size=Vector2.new(W_,body_h),Color=T.win_bg,Filled=true,Visible=true,ZIndex=1})
 
-    -- Content body background
-    local body_y = win.y + LAYOUT.titlebar_h + LAYOUT.tab_bar_h
-    local body_h = LAYOUT.row_h * LAYOUT.max_visible_rows + 2
-    win.d_body = newDraw("Square", {
-        Position  = Vector2.new(win.x, body_y),
-        Size      = Vector2.new(W, body_h),
-        Color     = THEME.window_bg,
-        Filled    = true,
-        Visible   = true,
-        ZIndex    = 10,
-    })
-
-    -- Window outer border
-    local total_h = LAYOUT.titlebar_h + LAYOUT.tab_bar_h + body_h
-    win.d_outline = newDraw("Square", {
-        Position  = Vector2.new(win.x, win.y),
-        Size      = Vector2.new(W, total_h),
-        Color     = THEME.titlebar_border,
-        Filled    = false,
-        Thickness = 1,
-        Visible   = true,
-        ZIndex    = 20,
-    })
-
-    win._body_y = body_y
-    win._body_h = body_h
-    win._W      = W
-
-    local UIS = game:GetService("UserInputService")
-    win.connections.drag_begin = UIS.InputBegan:Connect(function(input)
+    local function onBegin(input)
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        if mx>=win.x and mx<=win.x+W_ and my>=win.y and my<=win.y+L.title_h then
+            win._dragging = true
+            win._dx = mx - win.x
+            win._dy = my - win.y
+        end
+    end
+    local function onMove(input)
+        if not win._dragging then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+        win:_move(input.Position.X - win._dx, input.Position.Y - win._dy)
+    end
+    local function onEnd(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-            if mx >= win.x and mx <= win.x + W and my >= win.y and my <= win.y + LAYOUT.titlebar_h then
-                win.dragging = true
-                win.drag_ox = mx - win.x
-                win.drag_oy = my - win.y
-            end
+            win._dragging = false
         end
-    end)
-    win.connections.drag_move = UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and win.dragging then
-            local mx, my = input.Position.X, input.Position.Y
-            win:_move(mx - win.drag_ox, my - win.drag_oy)
-        end
-    end)
-    win.connections.drag_end = UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            win.dragging = false
-        end
-    end)
-
-    win.connections.keybind = UIS.InputBegan:Connect(function(input, gpe)
+    end
+    local function onKey(input, gpe)
         if gpe then return end
-        if input.KeyCode == Enum.KeyCode[win.keybind] then
-            win:Toggle()
-        end
-    end)
+        local ok, kc = pcall(function() return Enum.KeyCode[win.keybind] end)
+        if ok and input.KeyCode == kc then win:_toggleVis() end
+    end
 
+    table.insert(win._conns, UIS.InputBegan:Connect(onBegin))
+    table.insert(win._conns, UIS.InputChanged:Connect(onMove))
+    table.insert(win._conns, UIS.InputEnded:Connect(onEnd))
+    table.insert(win._conns, UIS.InputBegan:Connect(onKey))
+
+    setmetatable(win, {__index = Lib})
     return win
 end
 
-function UILibrary:_move(nx, ny)
+function Lib:_toggleVis()
+    self.visible = not self.visible
+    local v = self.visible
+    for _, obj in pairs(self._d) do
+        pcall(function() obj.Visible = v end)
+    end
+    for _, tab in ipairs(self.tabs) do
+        local active = (tab == self.active_tab)
+        pcall(function() tab._d.bg.Visible      = v end)
+        pcall(function() tab._d.txt.Visible     = v end)
+        pcall(function() tab._d.accent.Visible  = v and active end)
+        pcall(function() tab._d.divider.Visible = v end)
+        for _, row in ipairs(tab.rows) do
+            row:_show(v and active)
+        end
+    end
+end
+
+function Lib:_move(nx, ny)
     local dx = nx - self.x
     local dy = ny - self.y
     self.x = nx
     self.y = ny
+    self._body_y = self._body_y + dy
 
-    local function shiftV2(obj, field)
-        local v = obj[field]
-        obj[field] = Vector2.new(v.X + dx, v.Y + dy)
+    for _, obj in pairs(self._d) do
+        pcall(function() if obj.Position then mv2(obj,"Position",dx,dy) end end)
+        pcall(function() if obj.From     then mln(obj,dx,dy)            end end)
     end
-    local function shiftLine(obj)
-        obj.From = Vector2.new(obj.From.X + dx, obj.From.Y + dy)
-        obj.To   = Vector2.new(obj.To.X + dx, obj.To.Y + dy)
-    end
-
-    shiftV2(self.d_titlebar, "Position")
-    shiftLine(self.d_titlebar_border)
-    shiftV2(self.d_title, "Position")
-    shiftV2(self.d_badge_bg, "Position")
-    shiftV2(self.d_badge_border, "Position")
-    shiftV2(self.d_badge_text, "Position")
-    shiftV2(self.d_tabbar, "Position")
-    shiftLine(self.d_tabbar_border)
-    shiftV2(self.d_body, "Position")
-    shiftV2(self.d_outline, "Position")
-
     for _, tab in ipairs(self.tabs) do
         tab:_shift(dx, dy)
     end
+    self:_layoutTabs()
 end
 
-function UILibrary:Toggle()
-    self.visible = not self.visible
-    local v = self.visible
-    self.d_titlebar.Visible      = v
-    self.d_titlebar_border.Visible = v
-    self.d_title.Visible         = v
-    self.d_badge_bg.Visible      = v
-    self.d_badge_border.Visible  = v
-    self.d_badge_text.Visible    = v
-    self.d_tabbar.Visible        = v
-    self.d_tabbar_border.Visible = v
-    self.d_body.Visible          = v
-    self.d_outline.Visible       = v
-    for _, tab in ipairs(self.tabs) do
-        tab:_setVisible(v and (tab == self.active_tab))
-    end
-end
-
-function UILibrary:_refreshTabs()
-    local n      = #self.tabs
-    local W      = self._W
-    local tab_w  = math.floor(W / math.max(n, 1))
-    local ty     = self.y + LAYOUT.titlebar_h
-    local th     = LAYOUT.tab_bar_h
+function Lib:_layoutTabs()
+    local n = #self.tabs
+    if n == 0 then return end
+    local W_ = L.W
+    local tw  = math.floor(W_ / n)
+    local tby = self.y + L.title_h
 
     for i, tab in ipairs(self.tabs) do
-        local tx = self.x + (i - 1) * tab_w
-        local is_active = (tab == self.active_tab)
+        local tx = self.x + (i-1)*tw
+        local is = (tab == self.active_tab)
 
-        tab.d_tab_bg.Position = Vector2.new(tx, ty)
-        tab.d_tab_bg.Size     = Vector2.new(tab_w, th)
-        tab.d_tab_bg.Color    = is_active and THEME.tab_active_bg or THEME.tab_bg
+        pcall(function()
+            tab._d.bg.Position = Vector2.new(tx, tby)
+            tab._d.bg.Size     = Vector2.new(tw, L.tab_h)
+            tab._d.bg.Color    = is and T.tab_active_bg or T.tab_bg
+        end)
+        pcall(function()
+            tab._d.txt.Position = Vector2.new(tx + tw/2, tby + L.tab_h/2 - L.fs_tab/2)
+            tab._d.txt.Color    = is and T.tab_active_txt or T.tab_txt
+        end)
+        pcall(function()
+            tab._d.accent.From    = Vector2.new(tx+4, tby+L.tab_h-1)
+            tab._d.accent.To      = Vector2.new(tx+tw-4, tby+L.tab_h-1)
+            tab._d.accent.Visible = is and self.visible
+        end)
+        pcall(function()
+            tab._d.divider.From    = Vector2.new(tx+tw, tby+4)
+            tab._d.divider.To      = Vector2.new(tx+tw, tby+L.tab_h-4)
+            tab._d.divider.Visible = (i < n) and self.visible
+        end)
 
-        tab.d_tab_text.Position = Vector2.new(tx + tab_w / 2, ty + th / 2 - 5)
-        tab.d_tab_text.Color    = is_active and THEME.tab_active_text or THEME.tab_text
-
-        tab.d_tab_accent.From    = Vector2.new(tx + 6, ty + th - 2)
-        tab.d_tab_accent.To      = Vector2.new(tx + tab_w - 6, ty + th - 2)
-        tab.d_tab_accent.Visible = is_active
-
-        if i < n then
-            tab.d_tab_divider.From = Vector2.new(tx + tab_w, ty + 4)
-            tab.d_tab_divider.To   = Vector2.new(tx + tab_w, ty + th - 4)
-            tab.d_tab_divider.Visible = true
-        else
-            tab.d_tab_divider.Visible = false
-        end
-
-        tab._tx   = tx
-        tab._tw   = tab_w
+        tab._tx = tx
+        tab._tw = tw
     end
 end
 
-function UILibrary:Tab(name)
+function Lib:_switchTab(tab)
+    if self.active_tab == tab then return end
+    for _, row in ipairs(self.active_tab.rows) do row:_show(false) end
+    self.active_tab = tab
+    self:_layoutTabs()
+    for _, row in ipairs(tab.rows) do row:_show(true) end
+end
+
+function Lib:Tab(name)
     local win = self
     local tab = {
-        name     = name,
-        win      = win,
-        rows     = {},
-        visible  = false,
-        scroll   = 0,
-        _tx      = 0,
-        _tw      = 0,
+        name   = name,
+        win    = win,
+        rows   = {},
+        _tx    = 0,
+        _tw    = 0,
+        _cur_y = win._body_y,
+        _d     = {},
     }
-    setmetatable(tab, {__index = UILibrary})
 
-    tab.d_tab_bg = newDraw("Square", {
-        Position = Vector2.new(0, 0),
-        Size     = Vector2.new(50, LAYOUT.tab_bar_h),
-        Color    = THEME.tab_bg,
-        Filled   = true,
-        Visible  = true,
-        ZIndex   = 11,
-    })
-    tab.d_tab_text = newDraw("Text", {
-        Text     = name,
-        Position = Vector2.new(0, 0),
-        Size     = LAYOUT.font_size_tab,
-        Color    = THEME.tab_text,
-        Centered = true,
-        Visible  = true,
-        ZIndex   = 13,
-    })
-    tab.d_tab_accent = newDraw("Line", {
-        From      = Vector2.new(0, 0),
-        To        = Vector2.new(50, 0),
-        Color     = THEME.tab_accent,
-        Thickness = 2,
-        Visible   = false,
-        ZIndex    = 14,
-    })
-    tab.d_tab_divider = newDraw("Line", {
-        From      = Vector2.new(0, 0),
-        To        = Vector2.new(0, LAYOUT.tab_bar_h),
-        Color     = THEME.tab_border,
-        Thickness = 1,
-        Visible   = false,
-        ZIndex    = 12,
-    })
+    tab._d.bg     = D("Square",{Position=Vector2.new(0,0),Size=Vector2.new(50,L.tab_h),Color=T.tab_bg,Filled=true,Visible=true,ZIndex=3})
+    tab._d.txt    = D("Text",  {Text=name,Position=Vector2.new(0,0),Size=L.fs_tab,Color=T.tab_txt,Centered=true,Visible=true,ZIndex=5})
+    tab._d.accent = D("Line",  {From=Vector2.new(0,0),To=Vector2.new(10,0),Color=T.accent,Thickness=2,Visible=false,ZIndex=6})
+    tab._d.divider= D("Line",  {From=Vector2.new(0,0),To=Vector2.new(0,10),Color=T.tab_border,Thickness=1,Visible=false,ZIndex=4})
 
     table.insert(win.tabs, tab)
+    if #win.tabs == 1 then win.active_tab = tab end
+    win:_layoutTabs()
 
-    if #win.tabs == 1 then
-        win.active_tab = tab
-        tab.visible = true
+    if #win.tabs > 1 then
     end
 
-    win:_refreshTabs()
-
-    local UIS = game:GetService("UserInputService")
-    tab._conn = UIS.InputBegan:Connect(function(input)
+    local c = UIS.InputBegan:Connect(function(input)
         if not win.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-            local ty = win.y + LAYOUT.titlebar_h
-            if mx >= tab._tx and mx <= tab._tx + tab._tw
-                and my >= ty and my <= ty + LAYOUT.tab_bar_h then
-                win:_switchTab(tab)
-            end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        local tby = win.y + L.title_h
+        if mx >= tab._tx and mx <= tab._tx + tab._tw
+            and my >= tby and my <= tby + L.tab_h then
+            win:_switchTab(tab)
         end
     end)
-
-    function tab:_setVisible(v)
-        self.d_tab_bg.Visible      = v or (self.win.visible)
-        self.d_tab_text.Visible    = v or (self.win.visible)
-        self.d_tab_accent.Visible  = v and (self == self.win.active_tab)
-        self.d_tab_divider.Visible = self.win.visible and (#self.win.tabs > 1)
-        for _, row in ipairs(self.rows) do
-            row:_setVisible(v)
-        end
-    end
+    table.insert(win._conns, c)
 
     function tab:_shift(dx, dy)
-        local function sv2(obj, field)
-            local p = obj[field]
-            obj[field] = Vector2.new(p.X + dx, p.Y + dy)
-        end
-        local function sl(obj)
-            obj.From = Vector2.new(obj.From.X + dx, obj.From.Y + dy)
-            obj.To   = Vector2.new(obj.To.X + dx, obj.To.Y + dy)
-        end
-        sv2(self.d_tab_bg, "Position")
-        sv2(self.d_tab_text, "Position")
-        sl(self.d_tab_accent)
-        sl(self.d_tab_divider)
-        for _, row in ipairs(self.rows) do
-            row:_shift(dx, dy)
-        end
+        self._cur_y = self._cur_y + dy
+        for _, row in ipairs(self.rows) do row:_shift(dx, dy) end
     end
 
-    function tab:_getNextY()
-        return win._body_y + #self.rows * LAYOUT.row_h
-    end
-
+    setmetatable(tab, {__index = Lib})
     return tab
 end
 
-function UILibrary:_switchTab(tab)
-    if self.active_tab == tab then return end
-    -- hide old
-    for _, row in ipairs(self.active_tab.rows) do
-        row:_setVisible(false)
-    end
-    self.active_tab = tab
-    self:_refreshTabs()
-    for _, row in ipairs(tab.rows) do
-        row:_setVisible(true)
-    end
-end
-
-local function newRow(tab, kind)
+local function makeRow(tab, h)
     local win = tab.win
-    local row_index = #tab.rows
-    local rx = win.x
-    local ry = tab:_getNextY()
-    local W  = win._W
-    local row = {
-        kind    = kind,
-        tab     = tab,
-        win     = win,
-        rx      = rx,
-        ry      = ry,
-        visible = (tab == win.active_tab),
-        drawings = {},
-    }
-    setmetatable(row, {__index = UILibrary})
-
-    row.d_bg = newDraw("Square", {
-        Position = Vector2.new(rx, ry),
-        Size     = Vector2.new(W, LAYOUT.row_h),
-        Color    = THEME.row_bg,
-        Filled   = true,
-        Visible  = row.visible,
-        ZIndex   = 15,
-    })
-    row.d_border = newDraw("Line", {
-        From     = Vector2.new(rx, ry + LAYOUT.row_h),
-        To       = Vector2.new(rx + W, ry + LAYOUT.row_h),
-        Color    = THEME.row_border,
-        Thickness = 1,
-        Visible  = row.visible,
-        ZIndex   = 16,
-    })
-    row.d_label = newDraw("Text", {
-        Text     = "",
-        Position = Vector2.new(rx + LAYOUT.row_pad_x, ry + LAYOUT.row_h / 2 - 6),
-        Size     = LAYOUT.font_size_row,
-        Color    = THEME.row_text,
-        Visible  = row.visible,
-        ZIndex   = 17,
-    })
-
-    function row:_setVisible(v)
-        self.visible = v
-        self.d_bg.Visible     = v
-        self.d_border.Visible = v
-        self.d_label.Visible  = v
-        for _, d in ipairs(self.drawings) do
-            if d._base_visible ~= false then
-                d.Visible = v
-            end
-        end
-    end
-
-    function row:_shift(dx, dy)
-        self.rx = self.rx + dx
-        self.ry = self.ry + dy
-        local function sv2(obj, field)
-            local p = obj[field]
-            obj[field] = Vector2.new(p.X + dx, p.Y + dy)
-        end
-        local function sl(obj)
-            obj.From = Vector2.new(obj.From.X + dx, obj.From.Y + dy)
-            obj.To   = Vector2.new(obj.To.X + dx, obj.To.Y + dy)
-        end
-        sv2(self.d_bg, "Position")
-        sl(self.d_border)
-        sv2(self.d_label, "Position")
-        for _, d in ipairs(self.drawings) do
-            if d.Position then sv2(d, "Position")
-            elseif d.From then sl(d) end
-        end
-    end
-
-    table.insert(tab.rows, row)
-    return row
-end
-
-function UILibrary:Label(text)
-    local tab = self
-    local win = tab.win
+    local W_  = L.W
     local rx  = win.x
-    local ry  = tab:_getNextY()
-    local W   = win._W
+    local ry  = tab._cur_y
     local vis = (tab == win.active_tab)
 
     local row = {
-        kind    = "label",
-        tab     = tab,
-        win     = win,
-        rx      = rx,
-        ry      = ry,
-        visible = vis,
-        drawings = {},
+        _win   = win,
+        _tab   = tab,
+        _rx    = rx,
+        _ry    = ry,
+        _h     = h,
+        _vis   = vis,
+        _extra = {},
     }
-    setmetatable(row, {__index = UILibrary})
 
-    row.d_bg = newDraw("Square", {
-        Position = Vector2.new(rx, ry),
-        Size     = Vector2.new(W, 28),
-        Color    = THEME.window_bg,
-        Filled   = true,
-        Visible  = vis,
-        ZIndex   = 15,
-    })
-    row.d_label_txt = newDraw("Text", {
-        Text     = text,
-        Position = Vector2.new(rx + LAYOUT.row_pad_x, ry + 7),
-        Size     = LAYOUT.font_size_label,
-        Color    = THEME.label_text,
-        Visible  = vis,
-        ZIndex   = 17,
-    })
-    row.d_sep = newDraw("Line", {
-        From     = Vector2.new(rx, ry + 27),
-        To       = Vector2.new(rx + W, ry + 27),
-        Color    = THEME.label_border,
-        Thickness = 1,
-        Visible  = vis,
-        ZIndex   = 16,
-    })
+    row._bg  = D("Square",{Position=Vector2.new(rx,ry),Size=Vector2.new(W_,h),Color=T.row_bg,Filled=true,Visible=vis,ZIndex=6})
+    row._sep = D("Line",  {From=Vector2.new(rx,ry+h),To=Vector2.new(rx+W_,ry+h),Color=T.row_border,Thickness=1,Visible=vis,ZIndex=7})
+    row._lbl = D("Text",  {Text="",Position=Vector2.new(rx+L.pad, ry + h/2 - L.fs_row/2),Size=L.fs_row,Color=T.row_txt,Visible=vis,ZIndex=8})
 
-    function row:_setVisible(v)
-        self.visible = v
-        self.d_bg.Visible        = v
-        self.d_label_txt.Visible = v
-        self.d_sep.Visible       = v
-        for _, d in ipairs(self.drawings) do d.Visible = v end
-    end
-
-    function row:_shift(dx, dy)
-        self.rx = self.rx + dx
-        self.ry = self.ry + dy
-        local function sv2(o, f) local p=o[f]; o[f]=Vector2.new(p.X+dx,p.Y+dy) end
-        local function sl(o) o.From=Vector2.new(o.From.X+dx,o.From.Y+dy); o.To=Vector2.new(o.To.X+dx,o.To.Y+dy) end
-        sv2(self.d_bg, "Position")
-        sv2(self.d_label_txt, "Position")
-        sl(self.d_sep)
-        for _, d in ipairs(self.drawings) do
-            if d.Position then sv2(d, "Position") elseif d.From then sl(d) end
+    function row:_show(v)
+        self._vis = v
+        pcall(function() self._bg.Visible  = v end)
+        pcall(function() self._sep.Visible = v end)
+        pcall(function() self._lbl.Visible = v end)
+        for _, e in ipairs(self._extra) do
+            if not e._forcehide then
+                pcall(function() e.Visible = v end)
+            end
         end
     end
 
-    local old_get = tab._getNextY
-    tab._label_offset = (tab._label_offset or 0) + 28 - LAYOUT.row_h
+    function row:_shift(dx, dy)
+        self._rx = self._rx + dx
+        self._ry = self._ry + dy
+        pcall(function() mv2(self._bg,  "Position", dx, dy) end)
+        pcall(function() mln(self._sep, dx, dy) end)
+        pcall(function() mv2(self._lbl, "Position", dx, dy) end)
+        for _, e in ipairs(self._extra) do
+            pcall(function() if e.Position then mv2(e,"Position",dx,dy) end end)
+            pcall(function() if e.From     then mln(e,dx,dy)            end end)
+            pcall(function() if e.Center   then
+                local c = e.Center
+                e.Center = Vector2.new(c.X+dx, c.Y+dy)
+            end end)
+        end
+    end
 
+    function row:_addE(obj, forcehide)
+        obj._forcehide = forcehide or false
+        table.insert(self._extra, obj)
+        return obj
+    end
+
+    tab._cur_y = tab._cur_y + h
+    table.insert(tab.rows, row)
+    return row, rx, ry, W_, vis
+end
+
+function Lib:Label(text)
+    local tab = self
+    local win = tab.win
+    local W_  = L.W
+    local rx  = win.x
+    local ry  = tab._cur_y
+    local vis = (tab == win.active_tab)
+    local h   = L.lbl_h
+
+    local row = {
+        _win   = win,
+        _tab   = tab,
+        _rx    = rx,
+        _ry    = ry,
+        _h     = h,
+        _vis   = vis,
+        _extra = {},
+    }
+
+    row._bg  = D("Square",{Position=Vector2.new(rx,ry),Size=Vector2.new(W_,h),Color=T.lbl_bg,Filled=true,Visible=vis,ZIndex=6})
+    row._sep = D("Line",  {From=Vector2.new(rx,ry+h),To=Vector2.new(rx+W_,ry+h),Color=T.bar_border,Thickness=1,Visible=vis,ZIndex=7})
+    row._lbl = D("Text",  {Text=text,Position=Vector2.new(rx+L.pad, ry + h/2 - L.fs_lbl/2),Size=L.fs_lbl,Color=T.lbl_txt,Visible=vis,ZIndex=8})
+
+    function row:_show(v)
+        self._vis = v
+        pcall(function() self._bg.Visible  = v end)
+        pcall(function() self._sep.Visible = v end)
+        pcall(function() self._lbl.Visible = v end)
+    end
+    function row:_shift(dx, dy)
+        self._rx=self._rx+dx; self._ry=self._ry+dy
+        pcall(function() mv2(self._bg,  "Position",dx,dy) end)
+        pcall(function() mln(self._sep, dx,dy) end)
+        pcall(function() mv2(self._lbl, "Position",dx,dy) end)
+    end
+
+    tab._cur_y = tab._cur_y + h
     table.insert(tab.rows, row)
     return row
 end
 
-function UILibrary:Button(text, callback)
-    local tab = self
-    local row = newRow(tab, "button")
-    row.d_label.Text = text
+function Lib:Button(label, btnText, callback)
+    if type(btnText) == "function" then
+        callback = btnText; btnText = label
+    end
+    local row, rx, ry, W_, vis = makeRow(self, L.row_h)
+    row._lbl.Text = label
 
-    local W   = tab.win._W
-    local rx  = row.rx
-    local ry  = row.ry
-    local vis = row.visible
+    local bx = rx + W_ - L.pad - L.btn_w
+    local by = ry + (L.row_h - L.btn_h) / 2
 
-    local btn_w  = 90
-    local btn_h  = 26
-    local btn_x  = rx + W - LAYOUT.row_pad_x - btn_w
-    local btn_y  = ry + (LAYOUT.row_h - btn_h) / 2
+    local dbg  = row:_addE(D("Square",{Position=Vector2.new(bx,by),Size=Vector2.new(L.btn_w,L.btn_h),Color=T.btn_bg,Filled=true,Visible=vis,ZIndex=9}))
+    local dbdr = row:_addE(D("Square",{Position=Vector2.new(bx,by),Size=Vector2.new(L.btn_w,L.btn_h),Color=T.btn_border,Filled=false,Thickness=1,Visible=vis,ZIndex=10}))
+    local dtxt = row:_addE(D("Text",  {Text=btnText,Position=Vector2.new(bx+L.btn_w/2, by+L.btn_h/2-L.fs_val/2),Size=L.fs_val,Color=T.btn_txt,Centered=true,Visible=vis,ZIndex=11}))
 
-    local d_btn_bg = newDraw("Square", {
-        Position = Vector2.new(btn_x, btn_y),
-        Size     = Vector2.new(btn_w, btn_h),
-        Color    = THEME.btn_bg,
-        Filled   = true,
-        Visible  = vis,
-        ZIndex   = 18,
-    })
-    local d_btn_border = newDraw("Square", {
-        Position  = Vector2.new(btn_x, btn_y),
-        Size      = Vector2.new(btn_w, btn_h),
-        Color     = THEME.btn_border,
-        Filled    = false,
-        Thickness = 1,
-        Visible   = vis,
-        ZIndex    = 19,
-    })
-    local d_btn_text = newDraw("Text", {
-        Text     = text,
-        Position = Vector2.new(btn_x + btn_w / 2, btn_y + btn_h / 2 - 5),
-        Size     = LAYOUT.font_size_val,
-        Color    = THEME.btn_text,
-        Centered = true,
-        Visible  = vis,
-        ZIndex   = 20,
-    })
-
-    table.insert(row.drawings, d_btn_bg)
-    table.insert(row.drawings, d_btn_border)
-    table.insert(row.drawings, d_btn_text)
-
-    row.d_label.Text  = ""
-    row.d_label.Color = THEME.row_text
-
-    row.d_label.Text = text
-
-    local UIS = game:GetService("UserInputService")
-    row._btn_conn = UIS.InputBegan:Connect(function(input)
-        if not row.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-            if mx >= btn_x and mx <= btn_x + btn_w
-                and my >= btn_y and my <= btn_y + btn_h then
-                d_btn_bg.Color = THEME.btn_hover_bg
-                if callback then
-                    task.spawn(callback)
-                end
-                task.delay(0.12, function()
-                    d_btn_bg.Color = THEME.btn_bg
-                end)
-            end
+    local c = UIS.InputBegan:Connect(function(input)
+        if not row._vis then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        if mx>=bx and mx<=bx+L.btn_w and my>=by and my<=by+L.btn_h then
+            dbg.Color = T.btn_hover
+            if callback then task.spawn(callback) end
+            task.delay(0.15, function() pcall(function() dbg.Color = T.btn_bg end) end)
         end
     end)
-
+    table.insert(self.win._conns, c)
     return row
 end
 
-function UILibrary:Toggle(text, default, callback)
-    local tab = self
-    local row = newRow(tab, "toggle")
-    row.d_label.Text = text
+function Lib:Toggle(label, default, callback)
+    local row, rx, ry, W_, vis = makeRow(self, L.row_h)
+    row._lbl.Text = label
 
-    local state = default or false
-    local rx  = row.rx
-    local ry  = row.ry
-    local W   = tab.win._W
-    local vis = row.visible
+    local state = (default == true)
 
-    local tog_x = rx + W - LAYOUT.row_pad_x - LAYOUT.tog_w
-    local tog_y = ry + (LAYOUT.row_h - LAYOUT.tog_h) / 2
+    local tx = rx + W_ - L.pad - L.tog_w
+    local ty = ry + (L.row_h - L.tog_h) / 2
+    local cy = math.floor(ty + L.tog_h / 2)
 
-    local d_track = newDraw("Square", {
-        Position  = Vector2.new(tog_x, tog_y),
-        Size      = Vector2.new(LAYOUT.tog_w, LAYOUT.tog_h),
-        Color     = state and THEME.tog_on_bg or THEME.tog_off_bg,
-        Filled    = true,
-        Visible   = vis,
-        ZIndex    = 18,
-    })
-    local d_track_border = newDraw("Square", {
-        Position  = Vector2.new(tog_x, tog_y),
-        Size      = Vector2.new(LAYOUT.tog_w, LAYOUT.tog_h),
-        Color     = THEME.tog_border,
-        Filled    = false,
-        Thickness = 1,
-        Visible   = vis,
-        ZIndex    = 19,
-    })
+    local toff_cx = tx + L.tog_r + 2
+    local ton_cx  = tx + L.tog_w - L.tog_r - 2
 
-    local thumb_off_x = tog_x + 2
-    local thumb_on_x  = tog_x + LAYOUT.tog_w - LAYOUT.tog_thumb_r * 2 - 2
-    local thumb_cx    = state and (thumb_on_x + LAYOUT.tog_thumb_r) or (thumb_off_x + LAYOUT.tog_thumb_r)
-    local thumb_cy    = tog_y + LAYOUT.tog_h / 2
+    local dtrack = row:_addE(D("Square",{Position=Vector2.new(tx,ty),Size=Vector2.new(L.tog_w,L.tog_h),Color=state and T.tog_on or T.tog_off,Filled=true,Visible=vis,ZIndex=9}))
+    local dtbdr  = row:_addE(D("Square",{Position=Vector2.new(tx,ty),Size=Vector2.new(L.tog_w,L.tog_h),Color=T.tog_border,Filled=false,Thickness=1,Visible=vis,ZIndex=10}))
+    local dthumb = row:_addE(D("Circle",{Center=Vector2.new(state and ton_cx or toff_cx, cy),Radius=L.tog_r,Color=state and T.tog_on_thumb or T.tog_off_thumb,Filled=true,Visible=vis,ZIndex=11}))
 
-    local d_thumb = newDraw("Circle", {
-        Center    = Vector2.new(thumb_cx, thumb_cy),
-        Radius    = LAYOUT.tog_thumb_r,
-        Color     = state and THEME.tog_on_thumb or THEME.tog_off_thumb,
-        Filled    = true,
-        Visible   = vis,
-        ZIndex    = 20,
-    })
-
-    table.insert(row.drawings, d_track)
-    table.insert(row.drawings, d_track_border)
-    table.insert(row.drawings, d_thumb)
-
-    local function applyState(s)
+    local function apply(s)
         state = s
-        d_track.Color = s and THEME.tog_on_bg or THEME.tog_off_bg
-        d_thumb.Color = s and THEME.tog_on_thumb or THEME.tog_off_thumb
-        local tx = s and (thumb_on_x + LAYOUT.tog_thumb_r) or (thumb_off_x + LAYOUT.tog_thumb_r)
-        d_thumb.Center = Vector2.new(tx, thumb_cy)
-        if callback then callback(s) end
+        pcall(function() dtrack.Color = s and T.tog_on or T.tog_off end)
+        pcall(function() dthumb.Color = s and T.tog_on_thumb or T.tog_off_thumb end)
+        pcall(function() dthumb.Center = Vector2.new(s and ton_cx or toff_cx, cy) end)
+        if callback then task.spawn(callback, s) end
     end
 
-    local UIS = game:GetService("UserInputService")
-    row._tog_conn = UIS.InputBegan:Connect(function(input)
-        if not row.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-            if mx >= tog_x and mx <= tog_x + LAYOUT.tog_w
-                and my >= tog_y and my <= tog_y + LAYOUT.tog_h then
-                applyState(not state)
-            end
+    local c = UIS.InputBegan:Connect(function(input)
+        if not row._vis then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        if mx>=tx and mx<=tx+L.tog_w and my>=ty and my<=ty+L.tog_h then
+            apply(not state)
         end
     end)
+    table.insert(self.win._conns, c)
 
-    row.SetState = applyState
-    row.GetState = function() return state end
+    row.Set = function(s) apply(s) end
+    row.Get = function() return state end
     return row
 end
 
-function UILibrary:Slider(text, min, max, default, callback)
-    local tab = self
-    local row = newRow(tab, "slider")
-    row.d_label.Text = text
-    row.d_label.Position = Vector2.new(row.rx + LAYOUT.row_pad_x, row.ry + 8)
+function Lib:Slider(label, min, max, default, callback)
+    local row, rx, ry, W_, vis = makeRow(self, L.row_h)
+
+    row._lbl.Text     = label
+    row._lbl.Position = Vector2.new(rx+L.pad, ry+8)
 
     local val = math.clamp(default or min, min, max)
-    local rx  = row.rx
-    local ry  = row.ry
-    local W   = tab.win._W
-    local vis = row.visible
 
-    local val_x = rx + W - LAYOUT.row_pad_x - 30
-    local val_y = ry + 8
+    local dval = row:_addE(D("Text",{
+        Text=tostring(math.round(val)),
+        Position=Vector2.new(rx+W_-L.pad, ry+8),
+        Size=L.fs_val, Color=T.sl_val, Visible=vis, ZIndex=9
+    }))
 
-    local d_val = newDraw("Text", {
-        Text     = tostring(math.round(val)),
-        Position = Vector2.new(val_x, val_y),
-        Size     = LAYOUT.font_size_val,
-        Color    = THEME.slider_val_text,
-        Visible  = vis,
-        ZIndex   = 18,
-    })
+    local trx = rx + L.pad
+    local try = ry + L.row_h - 14
+    local trw = W_ - L.pad*2
 
-    local track_x  = rx + LAYOUT.row_pad_x
-    local track_y  = ry + LAYOUT.row_h - 14
-    local track_w  = W - LAYOUT.row_pad_x * 2
-    local track_h  = LAYOUT.slider_h
+    local dtrk = row:_addE(D("Square",{Position=Vector2.new(trx,try),Size=Vector2.new(trw,L.sl_h),Color=T.sl_track,Filled=true,Visible=vis,ZIndex=9}))
 
-    local d_track_bg = newDraw("Square", {
-        Position  = Vector2.new(track_x, track_y),
-        Size      = Vector2.new(track_w, track_h),
-        Color     = THEME.slider_track,
-        Filled    = true,
-        Visible   = vis,
-        ZIndex    = 18,
-    })
+    local function fw() return math.max(L.sl_r, (val-min)/(max-min)*trw) end
 
-    local function getFillW()
-        return math.max(LAYOUT.slider_thumb, (val - min) / (max - min) * track_w)
-    end
-
-    local d_track_fill = newDraw("Square", {
-        Position  = Vector2.new(track_x, track_y),
-        Size      = Vector2.new(getFillW(), track_h),
-        Color     = THEME.slider_fill,
-        Filled    = true,
-        Visible   = vis,
-        ZIndex    = 19,
-    })
-
-    local thumb_cx = track_x + getFillW()
-    local thumb_cy = track_y + track_h / 2
-
-    local d_thumb = newDraw("Circle", {
-        Center    = Vector2.new(thumb_cx, thumb_cy),
-        Radius    = LAYOUT.slider_thumb,
-        Color     = THEME.slider_thumb,
-        Filled    = true,
-        Visible   = vis,
-        ZIndex    = 20,
-    })
-
-    table.insert(row.drawings, d_val)
-    table.insert(row.drawings, d_track_bg)
-    table.insert(row.drawings, d_track_fill)
-    table.insert(row.drawings, d_thumb)
+    local dfill = row:_addE(D("Square",{Position=Vector2.new(trx,try),Size=Vector2.new(fw(),L.sl_h),Color=T.sl_fill,Filled=true,Visible=vis,ZIndex=10}))
+    local dthumb= row:_addE(D("Circle",{Center=Vector2.new(trx+fw(), try+L.sl_h/2),Radius=L.sl_r,Color=T.sl_fill,Filled=true,Visible=vis,ZIndex=11}))
 
     local function applyVal(v)
         val = math.clamp(v, min, max)
-        local t = (val - min) / (max - min)
-        local fw = math.max(LAYOUT.slider_thumb, t * track_w)
-        d_val.Text = tostring(math.round(val))
-        d_track_fill.Size = Vector2.new(fw, track_h)
-        d_thumb.Center = Vector2.new(track_x + fw, thumb_cy)
-        if callback then callback(math.round(val)) end
+        local f = fw()
+        pcall(function() dval.Text       = tostring(math.round(val)) end)
+        pcall(function() dfill.Size      = Vector2.new(f, L.sl_h) end)
+        pcall(function() dthumb.Center   = Vector2.new(trx+f, try+L.sl_h/2) end)
+        if callback then task.spawn(callback, math.round(val)) end
     end
 
-    local dragging_slider = false
-    local UIS = game:GetService("UserInputService")
+    local dragging = false
+    local c1 = UIS.InputBegan:Connect(function(input)
+        if not row._vis then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        if mx>=trx and mx<=trx+trw and my>=try-8 and my<=try+L.sl_h+8 then
+            dragging = true
+            applyVal(min + math.clamp((mx-trx)/trw,0,1)*(max-min))
+        end
+    end)
+    local c2 = UIS.InputChanged:Connect(function(input)
+        if not row._vis or not dragging then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+        applyVal(min + math.clamp((input.Position.X-trx)/trw,0,1)*(max-min))
+    end)
+    local c3 = UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end
+    end)
+    table.insert(self.win._conns, c1)
+    table.insert(self.win._conns, c2)
+    table.insert(self.win._conns, c3)
 
-    row._sl_begin = UIS.InputBegan:Connect(function(input)
-        if not row.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-            local r = LAYOUT.slider_thumb
-            local tcx = d_thumb.Center.X
-            local tcy = d_thumb.Center.Y
-            if math.abs(mx - tcx) <= r + 4 and math.abs(my - tcy) <= r + 4 then
-                dragging_slider = true
-            elseif mx >= track_x and mx <= track_x + track_w
-                and my >= track_y - 6 and my <= track_y + track_h + 6 then
-                local t = (mx - track_x) / track_w
-                applyVal(min + t * (max - min))
-                dragging_slider = true
-            end
-        end
-    end)
-    row._sl_move = UIS.InputChanged:Connect(function(input)
-        if not row.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging_slider then
-            local mx = input.Position.X
-            local t  = math.clamp((mx - track_x) / track_w, 0, 1)
-            applyVal(min + t * (max - min))
-        end
-    end)
-    row._sl_end = UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging_slider = false
-        end
-    end)
-
-    row.SetValue = applyVal
-    row.GetValue = function() return val end
+    row.Set = function(v) applyVal(v) end
+    row.Get = function() return val end
     return row
 end
 
-function UILibrary:Dropdown(text, options, callback)
-    local tab = self
-    local row = newRow(tab, "dropdown")
-    row.d_label.Text = text
+function Lib:Dropdown(label, options, callback)
+    local row, rx, ry, W_, vis = makeRow(self, L.row_h)
+    row._lbl.Text = label
 
     local selected = options[1] or ""
-    local open     = false
-    local rx  = row.rx
-    local ry  = row.ry
-    local W   = tab.win._W
-    local vis = row.visible
+    local open = false
 
-    local d_val = newDraw("Text", {
-        Text     = selected,
-        Position = Vector2.new(rx + W - LAYOUT.row_pad_x - 20, ry + LAYOUT.row_h / 2 - 5),
-        Size     = LAYOUT.font_size_val,
-        Color    = THEME.dropdown_val,
-        Visible  = vis,
-        ZIndex   = 18,
-    })
-    local d_arrow = newDraw("Text", {
-        Text     = "<",
-        Position = Vector2.new(rx + W - LAYOUT.row_pad_x - 8, ry + LAYOUT.row_h / 2 - 5),
-        Size     = LAYOUT.font_size_val,
-        Color    = THEME.dropdown_arrow,
-        Visible  = vis,
-        ZIndex   = 18,
-    })
+    local dval   = row:_addE(D("Text",{Text=selected,Position=Vector2.new(rx+W_-L.pad-16, ry+L.row_h/2-L.fs_val/2),Size=L.fs_val,Color=T.dd_val,Visible=vis,ZIndex=9}))
+    local darrow = row:_addE(D("Text",{Text="<",Position=Vector2.new(rx+W_-L.pad-3, ry+L.row_h/2-L.fs_val/2),Size=L.fs_val,Color=T.dd_arrow,Visible=vis,ZIndex=9}))
 
-    table.insert(row.drawings, d_val)
-    table.insert(row.drawings, d_arrow)
-
-    local menu_items = {}
+    local items = {}
     for i, opt in ipairs(options) do
-        local item_y = ry + LAYOUT.row_h + (i - 1) * 28
-
-        local d_item_bg = newDraw("Square", {
-            Position = Vector2.new(rx + LAYOUT.row_pad_x, item_y),
-            Size     = Vector2.new(W - LAYOUT.row_pad_x * 2, 26),
-            Color    = THEME.dropdown_menu_bg,
-            Filled   = true,
-            Visible  = false,
-            ZIndex   = 30,
-        })
-        local d_item_txt = newDraw("Text", {
-            Text     = opt,
-            Position = Vector2.new(rx + LAYOUT.row_pad_x + 8, item_y + 6),
-            Size     = LAYOUT.font_size_val,
-            Color    = (opt == selected) and THEME.dropdown_sel or THEME.dropdown_item,
-            Visible  = false,
-            ZIndex   = 31,
-        })
-        d_item_bg._base_visible = false
-        d_item_txt._base_visible = false
-        table.insert(row.drawings, d_item_bg)
-        table.insert(row.drawings, d_item_txt)
-        table.insert(menu_items, {bg=d_item_bg, txt=d_item_txt, val=opt, iy=item_y})
+        local iy  = ry + L.row_h + (i-1)*26
+        local ibg = row:_addE(D("Square",{Position=Vector2.new(rx+L.pad,iy),Size=Vector2.new(W_-L.pad*2,24),Color=T.dd_menu_bg,Filled=true,Visible=false,ZIndex=20}), true)
+        local ibdr= row:_addE(D("Square",{Position=Vector2.new(rx+L.pad,iy),Size=Vector2.new(W_-L.pad*2,24),Color=T.outline,Filled=false,Thickness=1,Visible=false,ZIndex=21}), true)
+        local itxt= row:_addE(D("Text",  {Text=opt,Position=Vector2.new(rx+L.pad*2, iy+6),Size=L.fs_val,Color=(opt==selected) and T.dd_sel or T.dd_item,Visible=false,ZIndex=22}), true)
+        table.insert(items, {bg=ibg,bdr=ibdr,txt=itxt,val=opt,iy=iy})
     end
 
     local function closeMenu()
-        open = false
-        d_arrow.Text = "<"
-        for _, item in ipairs(menu_items) do
-            item.bg.Visible  = false
-            item.txt.Visible = false
+        open=false; darrow.Text="<"
+        for _,it in ipairs(items) do
+            pcall(function() it.bg.Visible=false; it.bdr.Visible=false; it.txt.Visible=false end)
         end
     end
-
     local function openMenu()
-        open = true
-        d_arrow.Text = "v"
-        for _, item in ipairs(menu_items) do
-            item.bg.Visible  = row.visible
-            item.txt.Visible = row.visible
+        open=true; darrow.Text="v"
+        for _,it in ipairs(items) do
+            pcall(function() it.bg.Visible=row._vis; it.bdr.Visible=row._vis; it.txt.Visible=row._vis end)
         end
     end
 
-    local UIS = game:GetService("UserInputService")
-    row._dd_conn = UIS.InputBegan:Connect(function(input)
-        if not row.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-
-            if open then
-                for _, item in ipairs(menu_items) do
-                    if mx >= rx + LAYOUT.row_pad_x and mx <= rx + W - LAYOUT.row_pad_x
-                        and my >= item.iy and my <= item.iy + 26 then
-                        selected = item.val
-                        d_val.Text = selected
-                        for _, it2 in ipairs(menu_items) do
-                            it2.txt.Color = (it2.val == selected) and THEME.dropdown_sel or THEME.dropdown_item
-                        end
-                        closeMenu()
-                        if callback then callback(selected) end
-                        return
+    local c = UIS.InputBegan:Connect(function(input)
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        if open then
+            local hit = false
+            for _,it in ipairs(items) do
+                if mx>=rx+L.pad and mx<=rx+W_-L.pad and my>=it.iy and my<=it.iy+24 then
+                    selected=it.val
+                    pcall(function() dval.Text=selected end)
+                    for _,it2 in ipairs(items) do
+                        pcall(function() it2.txt.Color=(it2.val==selected) and T.dd_sel or T.dd_item end)
                     end
-                end
-                closeMenu()
-            else
-                if mx >= rx and mx <= rx + W and my >= ry and my <= ry + LAYOUT.row_h then
-                    openMenu()
+                    closeMenu()
+                    if callback then task.spawn(callback,selected) end
+                    hit=true; break
                 end
             end
+            if not hit then closeMenu() end
+        else
+            if not row._vis then return end
+            if mx>=rx and mx<=rx+W_ and my>=ry and my<=ry+L.row_h then openMenu() end
         end
     end)
+    table.insert(self.win._conns, c)
 
-    row.SetValue  = function(v) selected = v; d_val.Text = v end
-    row.GetValue  = function() return selected end
+    row.Set = function(v) selected=v; pcall(function() dval.Text=v end) end
+    row.Get = function() return selected end
     return row
 end
 
-function UILibrary:Colorpicker(text, default, callback)
-    local tab = self
-    local row = newRow(tab, "colorpicker")
-    row.d_label.Text = text
+function Lib:Colorpicker(label, default, callback)
+    local row, rx, ry, W_, vis = makeRow(self, L.row_h)
+    row._lbl.Text = label
 
-    local color = default or Color3.fromRGB(255, 0, 0)
-    local rx  = row.rx
-    local ry  = row.ry
-    local W   = tab.win._W
-    local vis = row.visible
+    local color = default or Color3.fromRGB(255,0,0)
+    local sx = rx + W_ - L.pad - L.sw_w
+    local sy = ry + (L.row_h - L.sw_h)/2
 
-    local sw_w, sw_h = 26, 20
-    local sw_x = rx + W - LAYOUT.row_pad_x - sw_w
-    local sw_y = ry + (LAYOUT.row_h - sw_h) / 2
-
-    local d_swatch = newDraw("Square", {
-        Position = Vector2.new(sw_x, sw_y),
-        Size     = Vector2.new(sw_w, sw_h),
-        Color    = color,
-        Filled   = true,
-        Visible  = vis,
-        ZIndex   = 18,
-    })
-    local d_swatch_border = newDraw("Square", {
-        Position  = Vector2.new(sw_x, sw_y),
-        Size      = Vector2.new(sw_w, sw_h),
-        Color     = THEME.picker_border,
-        Filled    = false,
-        Thickness = 1,
-        Visible   = vis,
-        ZIndex    = 19,
-    })
-    local d_hex = newDraw("Text", {
-        Text     = colorToHex(color),
-        Position = Vector2.new(sw_x - 48, ry + LAYOUT.row_h / 2 - 5),
-        Size     = 10,
-        Color    = THEME.hint_text,
-        Visible  = vis,
-        ZIndex   = 18,
-    })
-
-    table.insert(row.drawings, d_swatch)
-    table.insert(row.drawings, d_swatch_border)
-    table.insert(row.drawings, d_hex)
+    local dsw  = row:_addE(D("Square",{Position=Vector2.new(sx,sy),Size=Vector2.new(L.sw_w,L.sw_h),Color=color,Filled=true,Visible=vis,ZIndex=9}))
+    local dsbdr= row:_addE(D("Square",{Position=Vector2.new(sx,sy),Size=Vector2.new(L.sw_w,L.sw_h),Color=T.sw_border,Filled=false,Thickness=1,Visible=vis,ZIndex=10}))
+    local dhex = row:_addE(D("Text",  {Text=hexStr(color),Position=Vector2.new(sx-52, ry+L.row_h/2-L.fs_hint/2),Size=L.fs_hint,Color=T.hint,Visible=vis,ZIndex=9}))
 
     local presets = {
-        Color3.fromRGB(124,106,247),
-        Color3.fromRGB(255,0,0),
-        Color3.fromRGB(0,255,0),
-        Color3.fromRGB(0,0,255),
-        Color3.fromRGB(255,165,0),
-        Color3.fromRGB(255,255,255),
-        Color3.fromRGB(255,20,147),
-        Color3.fromRGB(0,255,255),
+        Color3.fromRGB(124,106,247), Color3.fromRGB(230,50,50),
+        Color3.fromRGB(50,200,80),   Color3.fromRGB(50,140,255),
+        Color3.fromRGB(255,160,0),   Color3.fromRGB(255,20,147),
+        Color3.fromRGB(0,220,220),   Color3.fromRGB(240,240,240),
     }
-    local preset_idx = 1
+    local pidx = 1
 
-    local UIS = game:GetService("UserInputService")
-    row._cp_conn = UIS.InputBegan:Connect(function(input)
-        if not row.visible then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mx, my = input.Position.X, input.Position.Y
-            if mx >= sw_x and mx <= sw_x + sw_w and my >= sw_y and my <= sw_y + sw_h then
-                preset_idx = (preset_idx % #presets) + 1
-                color = presets[preset_idx]
-                d_swatch.Color = color
-                d_hex.Text = colorToHex(color)
-                if callback then callback(color) end
-            end
+    local c = UIS.InputBegan:Connect(function(input)
+        if not row._vis then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        local mx,my = input.Position.X, input.Position.Y
+        if mx>=sx and mx<=sx+L.sw_w and my>=sy and my<=sy+L.sw_h then
+            pidx = pidx % #presets + 1
+            color = presets[pidx]
+            pcall(function() dsw.Color = color; dhex.Text = hexStr(color) end)
+            if callback then task.spawn(callback, color) end
         end
     end)
+    table.insert(self.win._conns, c)
 
-    row.SetColor = function(c)
-        color = c
-        d_swatch.Color = c
-        d_hex.Text = colorToHex(c)
-    end
-    row.GetColor = function() return color end
+    row.Set = function(c2) color=c2; pcall(function() dsw.Color=c2; dhex.Text=hexStr(c2) end) end
+    row.Get = function() return color end
     return row
 end
 
-return UILibrary
+function Lib:Destroy()
+    for _, c in ipairs(self._conns) do pcall(function() c:Disconnect() end) end
+    Drawing.Clear()
+end
+
+return Lib
