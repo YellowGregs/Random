@@ -177,7 +177,6 @@ local function glow(row, edge)
 	end)
 end
 
--- invisible glass that closes whatever is open
 local overlay = new("TextButton", {
 	Name = "overlay",
 	BackgroundTransparency = 1,
@@ -381,7 +380,6 @@ end
 local topZ = 10
 local slot = 0
 
--- new windows line up like they're waiting for the bus
 local function spot(width)
 	local vp = viewport()
 	local perRow = math.max(1, math.floor((vp.X - 48) / (width + 12)))
@@ -723,7 +721,6 @@ function Library:Window(title)
 		pip.Name = "pip" .. index
 	end
 
-	-- resize math, please do not breathe on it
 	grip.InputBegan:Connect(function(input)
 		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
 			return
@@ -1158,7 +1155,6 @@ function Library:Window(title)
 		}
 	end
 
-	-- the component everyone judges first
 	function w:dropdown(text, options, callback, multi)
 		local list = options or {}
 		local selected = {}
